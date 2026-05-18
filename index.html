@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="FocusFlow — A premium Pomodoro productivity timer to help you study smarter, beat procrastination, and stay in flow." />
+
+  <title>FocusFlow · Pomodoro Productivity Timer</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Google Forms Integration Module -->
+  <script src="googleForms.js"></script>
+
+  <style>
+    /* ── Task Prompt Modal ───────────────────────────────────────────────── */
+    .task-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .task-modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .task-modal {
+      background: linear-gradient(135deg, rgba(30, 20, 60, 0.98) 0%, rgba(15, 10, 40, 0.98) 100%);
+      border: 1px solid rgba(124, 58, 237, 0.35);
+      border-radius: 24px;
+      padding: 40px 36px 32px;
+      width: min(480px, calc(100vw - 40px));
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 60px rgba(124, 58, 237, 0.2);
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+
+    .task-modal-backdrop.open .task-modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .task-modal-icon {
+      font-size: 2.4rem;
+      margin-bottom: 12px;
+      display: block;
+      text-align: center;
+      animation: icon-float 3s ease-in-out infinite;
+    }
+
+    @keyframes icon-float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    .task-modal h3 {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin: 0 0 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .task-modal .task-modal-sub {
+      text-align: center;
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .task-modal-field {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .task-modal-field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 8px;
+    }
+
+    .task-modal-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(124, 58, 237, 0.4);
+      border-radius: 14px;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 13px 16px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .task-modal-input::placeholder {
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    .task-modal-input:focus {
+      border-color: var(--accent, #7c3aed);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 0 4px var(--accent-glow, rgba(124, 58, 237, 0.25));
+    }
+
+    .task-modal-info-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .task-modal-info-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .task-modal-info-chip .chip-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .task-modal-info-chip .chip-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent, #7c3aed);
+    }
+
+    .task-modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .task-modal-skip {
+      flex: 0 0 auto;
+      background: transparent;
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      color: rgba(255, 255, 255, 0.4);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .task-modal-skip:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .task-modal-start {
+      flex: 1;
+      background: linear-gradient(135deg, var(--accent, #7c3aed), #6d28d9);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 13px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .task-modal-start:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(124, 58, 237, 0.55);
+    }
+
+    .task-modal-start:active {
+      transform: translateY(0);
+    }
+
+    .task-modal-enter-hint {
+      text-align: center;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.2);
+      margin-top: 14px;
+    }
+
+    .task-modal-enter-hint kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-size: 0.68rem;
+    }
+
+    /* ── Task Badge (shown in timer card after task is set) ──────────────── */
+    .task-badge-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2px 14px;
+      min-height: 32px;
+    }
+
+    .task-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(124, 58, 237, 0.15);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      border-radius: 20px;
+      padding: 4px 12px 4px 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .task-badge:hover {
+      background: rgba(124, 58, 237, 0.25);
+      border-color: rgba(124, 58, 237, 0.5);
+    }
+
+    .task-badge .badge-icon {
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .task-badge-empty {
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.25);
+      font-style: italic;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .task-badge-empty:hover {
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    /* ── Cloud Sync Indicator ────────────────────────────────────────────── */
+    .sync-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.3);
+      white-space: nowrap;
+      transition: color 0.4s;
+    }
+
+    .sync-indicator .sync-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      transition: background 0.4s;
+      flex-shrink: 0;
+    }
+
+    .sync-indicator.syncing .sync-dot {
+      background: #f59e0b;
+      animation: pulse-dot 0.9s ease-in-out infinite;
+    }
+
+    .sync-indicator.synced .sync-dot {
+      background: #34d399;
+    }
+
+    .sync-indicator.synced {
+      color: #34d399;
+    }
+
+    .sync-indicator.error .sync-dot {
+      background: #f87171;
+    }
+
+    .sync-indicator.error {
+      color: #f87171;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(1.4);
+      }
+    }
+
+    /* ── Focus Overlay Task Label ────────────────────────────────────────── */
+    .fo-task-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+      min-height: 1.2em;
+      text-align: center;
+      transition: color 0.3s;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Spotify Playlist Section -->
+  <div class="spotify-section">
+    <div class="spotify-container">
+      <div id="spotify-player" class="spotify-player">
+        <iframe id="spotify-iframe" style="border-radius:12px"
+          src="https://open.spotify.com/embed/playlist/37i9dQZF1Fa1IIVtEpGUcU" width="100%" height="152" frameBorder="0"
+          allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+        </iframe>
+      </div>
+      <button class="spotify-toggle" id="spotify-toggle" onclick="togglePlaylistEditor()"
+        aria-label="Customize playlist" title="Add your own playlist">🎵</button>
+    </div>
+  </div>
+
+  <!-- Playlist Editor Backdrop -->
+  <div id="playlist-editor-backdrop" class="playlist-editor-backdrop" onclick="closePlaylistEditor()"></div>
+
+  <!-- Playlist Editor Modal -->
+  <div id="playlist-editor" class="playlist-editor" style="display: none;">
+    <div class="editor-content">
+      <h3>Add Your Spotify Playlist</h3>
+      <p>Paste your Spotify playlist link or ID</p>
+      <div class="editor-input-group">
+        <input type="text" id="playlist-input" class="playlist-input"
+          placeholder="https://open.spotify.com/playlist/... or playlist ID" aria-label="Spotify playlist URL or ID" />
+        <div class="editor-button-group">
+          <button class="editor-btn editor-btn-apply" onclick="applyPlaylist()"
+            aria-label="Apply playlist">Apply</button>
+          <button class="editor-btn editor-btn-cancel" onclick="closePlaylistEditor()"
+            aria-label="Close editor">Cancel</button>
+        </div>
+      </div>
+      <div class="editor-hint">💡 Copy the playlist link from Spotify and paste it above</div>
+    </div>
+  </div>
+
+  <!-- Animated Particle Canvas -->
+  <canvas id="particles"></canvas>
+
+  <!-- Toast Notification -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ── Task Prompt Modal ── -->
+  <div id="task-modal-backdrop" class="task-modal-backdrop" role="dialog" aria-modal="true"
+    aria-labelledby="task-modal-title">
+    <div class="task-modal" id="task-modal">
+      <span class="task-modal-icon">🎯</span>
+      <h3 id="task-modal-title">What are you working on?</h3>
+      <p class="task-modal-sub">Name your task — everything else is tracked automatically.</p>
+
+      <div class="task-modal-field">
+        <label for="task-modal-input">Task Name</label>
+        <input type="text" id="task-modal-input" class="task-modal-input" placeholder="e.g. Math Revision, Chapter 3…"
+          maxlength="100" autocomplete="off" spellcheck="false" />
+      </div>
+
+      <div class="task-modal-info-row">
+        <div class="task-modal-info-chip">
+          <span class="chip-label">⏱ Focus Time</span>
+          <span class="chip-value" id="modal-focus-dur">25 min</span>
+        </div>
+        <div class="task-modal-info-chip">
+          <span class="chip-label">☕ Break Time</span>
+          <span class="chip-value" id="modal-break-dur">5 min</span>
+        </div>
+      </div>
+
+      <div class="task-modal-actions">
+        <button class="task-modal-skip" id="task-modal-skip" onclick="taskModalSkip()">Skip</button>
+        <button class="task-modal-start" id="task-modal-confirm" onclick="taskModalConfirm()">▶ &nbsp;Start
+          Focusing</button>
+      </div>
+      <div class="task-modal-enter-hint"><kbd>Enter</kbd> to start &nbsp;·&nbsp; <kbd>Esc</kbd> to skip</div>
+    </div>
+  </div>
+
+  <!-- ── Focus Overlay ── -->
+  <div id="focus-overlay" aria-modal="true" role="dialog" aria-label="Deep focus mode">
+    <!-- Ambient floating orbs -->
+    <div class="fo-orb fo-orb1"></div>
+    <div class="fo-orb fo-orb2"></div>
+    <div class="fo-orb fo-orb3"></div>
+
+    <!-- Exit button -->
+    <button class="fo-exit-btn" id="fo-exit-btn" onclick="exitFocusMode()" aria-label="Exit focus mode">
+      <span class="fo-exit-icon">✕</span> Exit Focus
+    </button>
+
+    <!-- Centre content -->
+    <div class="fo-center">
+
+      <!-- Session badge -->
+      <div class="fo-session-badge" id="fo-session-badge">🎯 FOCUS SESSION</div>
+
+      <!-- Task label in focus overlay -->
+      <div class="fo-task-label" id="fo-task-label"></div>
+
+      <!-- Giant ring -->
+      <div class="fo-ring-wrap" id="fo-ring-wrap">
+        <svg class="fo-ring-svg" viewBox="0 0 340 340" aria-hidden="true">
+          <defs>
+            <filter id="glow-filter">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <circle class="fo-ring-bg" cx="170" cy="170" r="155" />
+          <circle class="fo-ring-arc" cx="170" cy="170" r="155" id="fo-ring-arc" />
+        </svg>
+        <div class="fo-timer-inner">
+          <div class="fo-time" id="fo-time">25:00</div>
+          <div class="fo-label" id="fo-label">FOCUS TIME</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="fo-controls">
+        <button class="fo-ctrl" id="fo-reset" onclick="focusReset()" aria-label="Reset">↺</button>
+        <button class="fo-ctrl fo-play" id="fo-play" onclick="focusToggle()" aria-label="Play/Pause">▶</button>
+        <button class="fo-ctrl" id="fo-skip" onclick="focusSkip()" aria-label="Skip">⏭</button>
+      </div>
+
+      <!-- Session dots -->
+      <div class="fo-dots" id="fo-dots" aria-label="Session progress"></div>
+
+      <!-- Keyboard hint -->
+      <div class="fo-hint" id="fo-hint">
+        <kbd>Space</kbd> pause/play &nbsp;·&nbsp; <kbd>Esc</kbd> exit focus mode
+      </div>
+    </div>
+
+    <!-- Completion flash -->
+    <div class="fo-flash" id="fo-flash"></div>
+  </div>
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <h1 class="logo">FocusFlow</h1>
+    <ul class="nav-links">
+      <li><a href="#timer-section">Timer</a></li>
+      <li><a href="#features-section">Features</a></li>
+      <li><a href="#how-section">How It Works</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero" id="timer-section" aria-label="Hero and timer">
+
+    <div class="hero-content">
+      <div class="hero-badges">
+        <span class="badge active">🔥 Pomodoro Technique</span>
+        <span class="badge">🎯 Deep Work</span>
+        <span class="badge">📈 Proven Method</span>
+      </div>
+
+      <h1>
+        Stay Focused.<br />
+        <span class="gradient-text">Study Smarter.</span>
+      </h1>
+
+      <p>
+        Improve concentration, manage study time effectively, and maintain
+        healthier study habits using the science-backed Pomodoro Technique.
+      </p>
+
+      <button class="start-btn" id="hero-start-btn" onclick="heroStartClick()">
+        Start Focusing
+      </button>
+    </div>
+
+    <!-- Timer Card -->
+    <div class="timer-card" id="timer-card">
+
+      <!-- Task Badge + Sync row -->
+      <div class="task-badge-wrap">
+        <!-- Hidden input keeps existing buildSessionData() working unchanged -->
+        <input type="hidden" id="task-name-input" />
+        <div id="task-badge-display" class="task-badge-empty" onclick="openTaskModal(false)" title="Click to set task">
+          <span id="task-badge-icon" style="display:none;font-size:0.9rem;">🎯</span>
+          <span id="task-badge-text">✏️  Set your task…</span>
+        </div>
+        <div class="sync-indicator" id="sync-indicator" title="Google Sheets sync status">
+          <span class="sync-dot"></span>
+          <span id="sync-label">Sheets</span>
+        </div>
+      </div>
+
+      <!-- Mode Tabs -->
+      <div class="mode-tabs" role="tablist" aria-label="Timer mode">
+        <button class="mode-tab active" id="tab-focus" role="tab" aria-selected="true" onclick="setMode('focus')">🎯
+          Focus</button>
+        <button class="mode-tab" id="tab-short" role="tab" aria-selected="false" onclick="setMode('short')">☕ Short
+          Break</button>
+        <button class="mode-tab" id="tab-long" role="tab" aria-selected="false" onclick="setMode('long')">🌙 Long
+          Break</button>
+      </div>
+
+      <!-- Circular Timer -->
+      <div class="timer-ring-container" aria-label="Timer progress">
+        <svg class="timer-ring-svg" viewBox="0 0 220 220" aria-hidden="true">
+          <circle class="ring-bg" cx="110" cy="110" r="100" />
+          <circle class="ring-progress" cx="110" cy="110" r="100" id="ring-progress" />
+        </svg>
+        <div class="timer-display">
+          <div class="timer-time" id="timer-display" aria-live="polite" aria-atomic="true">25:00</div>
+          <div class="timer-label" id="timer-label">FOCUS TIME</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="timer-controls" role="group" aria-label="Timer controls">
+        <button class="ctrl-btn" id="reset-btn" onclick="resetTimer()" aria-label="Reset timer">↺ Reset</button>
+        <button class="ctrl-btn primary" id="start-pause-btn" onclick="toggleTimer()" aria-label="Start timer">▶
+          Start</button>
+        <button class="ctrl-btn" id="skip-btn" onclick="skipSession()" aria-label="Skip session">⏭ Skip</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="session-info" role="region" aria-label="Session statistics">
+        <div class="session-stat">
+          <span class="stat-value" id="sessions-count">0</span>
+          <span class="stat-label">Sessions</span>
+        </div>
+        <div class="session-stat">
+          <span class="stat-value" id="streak-count">0</span>
+          <span class="stat-label">Streak 🔥</span>
+        </div>
+        <div class="session-stat">
+          <span class="stat-value" id="minutes-focused">0</span>
+          <span class="stat-label">Time Focused</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Features ── -->
+  <section class="features" id="features-section" aria-label="Features">
+    <div class="features-header">
+      <h2>Everything You Need to <span class="gradient-text">Stay in Flow</span></h2>
+      <p>Designed to eliminate distractions and build lasting study habits.</p>
+    </div>
+
+    <div class="feature-box" tabindex="0">
+      <span class="feature-icon">⏱️</span>
+      <h2>Smart Timer</h2>
+      <p>Auto-switching between focus and break sessions keeps your rhythm without any manual effort.</p>
+    </div>
+
+    <div class="feature-box" tabindex="0">
+      <span class="feature-icon">📊</span>
+      <h2>Session Tracking</h2>
+      <p>Monitor your completed sessions, daily streak, and total minutes focused in real-time.</p>
+    </div>
+
+    <div class="feature-box" tabindex="0">
+      <span class="feature-icon">🔔</span>
+      <h2>Break Reminders</h2>
+      <p>Reduces mental fatigue through intelligently scheduled short and long breaks.</p>
+    </div>
+
+    <div class="feature-box" tabindex="0">
+      <span class="feature-icon">🌙</span>
+      <h2>Dark Mode Design</h2>
+      <p>Easy on the eyes during late-night study sessions with a premium dark glassmorphism UI.</p>
+    </div>
+
+    <div class="feature-box" tabindex="0">
+      <span class="feature-icon">🎯</span>
+      <h2>Deep Focus Mode</h2>
+      <p>Minimalist interface lets you concentrate without distracting chrome or clutter.</p>
+    </div>
+
+    <div class="feature-box" tabindex="0">
+      <span class="feature-icon">⚡</span>
+      <h2>Streak System</h2>
+      <p>Build momentum with a streak counter that tracks your consecutive focused sessions.</p>
+    </div>
+  </section>
+
+  <!-- ── How It Works ── -->
+  <section class="how-it-works" id="how-section" aria-label="How it works">
+    <h2>How the <span class="gradient-text">Pomodoro Technique</span> Works</h2>
+    <p>A time management method that trains your brain to focus for short, powerful bursts.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Choose a Task</h3>
+        <p>Pick any task you want to work on and commit to it.</p>
+      </div>
+      <div class="steps-connector"><span></span></div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Work 25 Minutes</h3>
+        <p>Focus intensely until the timer rings. No distractions.</p>
+      </div>
+      <div class="steps-connector"><span></span></div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Short Break</h3>
+        <p>Take a 5-minute rest to recharge your attention.</p>
+      </div>
+      <div class="steps-connector"><span></span></div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Repeat &amp; Thrive</h3>
+        <p>Every 4 sessions earn a longer 15-minute break.</p>
+      </div>
+    </div>
+  </section>
+  <!-- ── JavaScript ── -->
+  <script>
+    /* ─── Particle Background ─── */
+    (function () {
+      const canvas = document.getElementById('particles');
+      const ctx = canvas.getContext('2d');
+      let W, H, particles;
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+
+      function Particle() {
+        this.x = Math.random() * W;
+        this.y = Math.random() * H;
+        this.r = Math.random() * 1.8 + 0.4;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.alpha = Math.random() * 0.5 + 0.1;
+        const colors = ['#7c3aed', '#818cf8', '#38bdf8', '#a78bfa'];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+      }
+
+      Particle.prototype.update = function () {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0) this.x = W;
+        if (this.x > W) this.x = 0;
+        if (this.y < 0) this.y = H;
+        if (this.y > H) this.y = 0;
+      };
+
+      Particle.prototype.draw = function () {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      };
+
+      function init() {
+        resize();
+        particles = Array.from({ length: 80 }, () => new Particle());
+      }
+
+      function loop() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', resize);
+      init();
+      loop();
+    })();
+
+    /* ─── Timer Logic ─── */
+    const MODES = {
+      focus: { label: 'FOCUS TIME', minutes: 25, accent: '#7c3aed', glow: 'rgba(124,58,237,0.35)' },
+      short: { label: 'SHORT BREAK', minutes: 5, accent: '#059669', glow: 'rgba(5,150,105,0.35)' },
+      long: { label: 'LONG BREAK', minutes: 15, accent: '#0284c7', glow: 'rgba(2,132,199,0.35)' },
+    };
+
+    let currentMode = 'focus';
+    let totalSeconds = MODES.focus.minutes * 60;
+    let secondsLeft = totalSeconds;
+    let isRunning = false;
+    let intervalId = null;
+    let sessionsDone = 0;
+    let streak = 0;
+    let minutesFocused = 0;
+
+    const timerDisplay = document.getElementById('timer-display');
+    const timerLabel = document.getElementById('timer-label');
+    const startPauseBtn = document.getElementById('start-pause-btn');
+    const ringProgress = document.getElementById('ring-progress');
+    const sessionsCount = document.getElementById('sessions-count');
+    const streakCount = document.getElementById('streak-count');
+    const minutesFocusedEl = document.getElementById('minutes-focused');
+    const timerCard = document.getElementById('timer-card');
+    const toast = document.getElementById('toast');
+
+    const CIRCUMFERENCE = 2 * Math.PI * 100; // r=100
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    /** Format total focused seconds as MM:SS or HH:MM:SS */
+    function formatFocusedTime(totalSec) {
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const sec = totalSec % 60;
+      if (h > 0) {
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      }
+      return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function updateRing() {
+      const progress = secondsLeft / totalSeconds;
+      const offset = CIRCUMFERENCE * (1 - progress);
+      ringProgress.style.strokeDashoffset = offset;
+    }
+
+    function updateDisplay() {
+      timerDisplay.textContent = formatTime(secondsLeft);
+      updateRing();
+      // pulse tick
+      timerDisplay.classList.remove('tick');
+      void timerDisplay.offsetWidth;
+      timerDisplay.classList.add('tick');
+    }
+
+    function applyMode(mode) {
+      const m = MODES[mode];
+      document.documentElement.style.setProperty('--accent', m.accent);
+      document.documentElement.style.setProperty('--accent-glow', m.glow);
+      timerLabel.textContent = m.label;
+      timerCard.style.boxShadow = `0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.5), 0 0 80px ${m.glow}`;
+    }
+
+    function setMode(mode) {
+      if (isRunning) { stopTimer(); }
+      currentMode = mode;
+      totalSeconds = MODES[mode].minutes * 60;
+      secondsLeft = totalSeconds;
+
+      // tab UI
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      const activeTab = document.getElementById('tab-' + mode);
+      activeTab.classList.add('active');
+      activeTab.setAttribute('aria-selected', 'true');
+
+      applyMode(mode);
+      updateDisplay();
+      startPauseBtn.textContent = '▶ Start';
+    }
+
+    function stopTimer() {
+      clearInterval(intervalId);
+      intervalId = null;
+      isRunning = false;
+      startPauseBtn.textContent = '▶ Start';
+    }
+
+    function startTimer() {
+      isRunning = true;
+      startPauseBtn.textContent = '⏸ Pause';
+      intervalId = setInterval(() => {
+        secondsLeft--;
+        updateDisplay();
+        if (currentMode === 'focus') {
+          minutesFocused++;
+          minutesFocusedEl.textContent = formatFocusedTime(minutesFocused);
+        }
+        if (secondsLeft <= 0) {
+          sessionComplete();
+        }
+      }, 1000);
+    }
+
+    function toggleTimer() {
+      if (isRunning) {
+        stopTimer();
+      } else {
+        // Show task modal only for a fresh focus session with no real task set
+        const taskVal = document.getElementById('task-name-input').value.trim();
+        const noTask = !taskVal || taskVal === 'FocusFlow Session';
+        if (currentMode === 'focus' && secondsLeft === totalSeconds && noTask) {
+          openTaskModal(true, () => startTimer());
+        } else {
+          startTimer();
+        }
+      }
+    }
+
+    function resetFocusedTime() {
+      minutesFocused = 0;
+      minutesFocusedEl.textContent = formatFocusedTime(0); // resets to "00:00"
+    }
+
+    function resetTimer() {
+      stopTimer();
+      secondsLeft = totalSeconds;
+      updateDisplay();
+      resetFocusedTime();
+      showToast('Timer reset ↺');
+    }
+
+    function skipSession() {
+      stopTimer();
+      // Submit skipped focus session to Google Sheets
+      if (currentMode === 'focus') {
+        const data = buildSessionData('skipped');
+        saveSessionLocally(data);
+        submitSessionToGoogleForms(data).then(() => setSyncStatus('synced')).catch(() => setSyncStatus('error'));
+        setSyncStatus('syncing');
+      }
+      sessionComplete();
+    }
+
+    function sessionComplete() {
+      stopTimer();
+      ringProgress.style.strokeDashoffset = CIRCUMFERENCE;
+
+      if (currentMode === 'focus') {
+        sessionsDone++;
+        streak++;
+        sessionsCount.textContent = sessionsDone;
+        streakCount.textContent = streak;
+
+        // Save & sync completed focus session
+        const data = buildSessionData('completed');
+        saveSessionLocally(data);
+        setSyncStatus('syncing');
+        submitSessionToGoogleForms(data)
+          .then(() => setSyncStatus('synced'))
+          .catch(() => setSyncStatus('error'));
+
+        // Every 4 focus sessions → long break
+        if (sessionsDone % 4 === 0) {
+          showToast('🎉 4 sessions done! Time for a long break.');
+          setTimeout(() => setMode('long'), 1800);
+        } else {
+          showToast('✅ Focus session complete! Take a short break.');
+          setTimeout(() => setMode('short'), 1800);
+        }
+      } else {
+        showToast('☕ Break done! Ready to focus again?');
+        setTimeout(() => setMode('focus'), 1800);
+      }
+    }
+
+    /* ─── Focus Mode State ─── */
+    const FO_CIRC = 2 * Math.PI * 155; // r=155 for focus overlay ring
+    let foRunning = false;
+    let foIntervalId = null;
+    let foSecondsLeft = totalSeconds;
+    let foSessionsDone = 0;
+
+    const foOverlay = document.getElementById('focus-overlay');
+    const foTime = document.getElementById('fo-time');
+    const foLabel = document.getElementById('fo-label');
+    const foPlay = document.getElementById('fo-play');
+    const foArc = document.getElementById('fo-ring-arc');
+    const foRingWrap = document.getElementById('fo-ring-wrap');
+    const foFlash = document.getElementById('fo-flash');
+    const foBadge = document.getElementById('fo-session-badge');
+    const foDots = document.getElementById('fo-dots');
+    const foHint = document.getElementById('fo-hint');
+
+    foArc.style.strokeDasharray = FO_CIRC;
+    foArc.style.strokeDashoffset = 0;
+
+    function foUpdateRing(secLeft, total) {
+      const pct = secLeft / total;
+      foArc.style.strokeDashoffset = FO_CIRC * (1 - pct);
+    }
+
+    function foUpdateTime(s) {
+      foTime.textContent = formatTime(s);
+      foUpdateRing(s, totalSeconds);
+    }
+
+    function foApplyMode(mode) {
+      const m = MODES[mode];
+      foLabel.textContent = m.label;
+      foArc.style.stroke = m.accent;
+      foArc.style.filter = `drop-shadow(0 0 18px ${m.accent})`;
+      foRingWrap.style.setProperty('--fo-accent', m.accent);
+      document.documentElement.style.setProperty('--accent', m.accent);
+      document.documentElement.style.setProperty('--accent-glow', m.glow);
+      const emojis = { focus: '🎯 FOCUS SESSION', short: '☕ SHORT BREAK', long: '🌙 LONG BREAK' };
+      foBadge.textContent = emojis[mode];
+      // sync card mode too
+      applyMode(mode);
+    }
+
+    function foRenderDots() {
+      while (foDots.firstChild) foDots.removeChild(foDots.firstChild);
+      for (let i = 0; i < 4; i++) {
+        const d = document.createElement('span');
+        d.className = 'fo-dot' + (i < (foSessionsDone % 4) ? ' fo-dot-done' : '');
+        foDots.appendChild(d);
+      }
+    }
+
+    function foStop() {
+      clearInterval(foIntervalId);
+      foIntervalId = null;
+      foRunning = false;
+      foPlay.textContent = '▶';
+      foPlay.setAttribute('aria-label', 'Play');
+    }
+
+    function foStart() {
+      foRunning = true;
+      foPlay.textContent = '⏸';
+      foPlay.setAttribute('aria-label', 'Pause');
+      foIntervalId = setInterval(() => {
+        foSecondsLeft--;
+        foUpdateTime(foSecondsLeft);
+        // keep main card in sync
+        secondsLeft = foSecondsLeft;
+        updateRing();
+        timerDisplay.textContent = formatTime(secondsLeft);
+        if (currentMode === 'focus') {
+          minutesFocused++;
+          minutesFocusedEl.textContent = formatFocusedTime(minutesFocused);
+        }
+        if (foSecondsLeft <= 0) {
+          foSessionComplete();
+        }
+      }, 1000);
+    }
+
+    function focusToggle() {
+      if (foRunning) { foStop(); } else { foStart(); }
+    }
+
+    function focusReset() {
+      foStop();
+      foSecondsLeft = totalSeconds;
+      foUpdateTime(foSecondsLeft);
+      resetFocusedTime();
+      showToast('Timer reset ↺');
+    }
+
+    function focusSkip() {
+      foStop();
+      // Submit skipped focus session
+      if (currentMode === 'focus') {
+        const data = buildSessionData('skipped');
+        saveSessionLocally(data);
+        setSyncStatus('syncing');
+        submitSessionToGoogleForms(data)
+          .then(() => setSyncStatus('synced'))
+          .catch(() => setSyncStatus('error'));
+      }
+      foSessionComplete();
+    }
+
+    function foSessionComplete() {
+      foStop();
+      foArc.style.strokeDashoffset = FO_CIRC;
+      // flash animation
+      foFlash.classList.add('fo-flash-active');
+      setTimeout(() => foFlash.classList.remove('fo-flash-active'), 800);
+
+      if (currentMode === 'focus') {
+        foSessionsDone++;
+        sessionsDone++;
+        streak++;
+        sessionsCount.textContent = sessionsDone;
+        streakCount.textContent = streak;
+        foRenderDots();
+
+        // Save & sync completed session from focus overlay
+        const data = buildSessionData('completed');
+        saveSessionLocally(data);
+        setSyncStatus('syncing');
+        submitSessionToGoogleForms(data)
+          .then(() => setSyncStatus('synced'))
+          .catch(() => setSyncStatus('error'));
+
+        const nextMode = (sessionsDone % 4 === 0) ? 'long' : 'short';
+        const msg = nextMode === 'long'
+          ? '🎉 4 sessions done! Long break time.'
+          : '✅ Focus done! Short break starting...';
+        showToast(msg);
+        setTimeout(() => {
+          foSwitchMode(nextMode);
+          setTimeout(() => foStart(), 800);
+        }, 1800);
+      } else {
+        showToast('☕ Break done! Focus session starting...');
+        setTimeout(() => {
+          foSwitchMode('focus');
+          setTimeout(() => foStart(), 800);
+        }, 1800);
+      }
+    }
+
+    function foSwitchMode(mode) {
+      currentMode = mode;
+      totalSeconds = MODES[mode].minutes * 60;
+      foSecondsLeft = totalSeconds;
+      secondsLeft = totalSeconds;
+      foUpdateTime(foSecondsLeft);
+      foApplyMode(mode);
+      // sync main card tabs
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        t.classList.remove('active'); t.setAttribute('aria-selected', 'false');
+      });
+      const tab = document.getElementById('tab-' + mode);
+      if (tab) { tab.classList.add('active'); tab.setAttribute('aria-selected', 'true'); }
+      updateDisplay();
+      startPauseBtn.textContent = '▶ Start';
+    }
+
+    /* ─── Task Prompt Modal Logic ─── */
+
+    let _taskModalCallback = null; // function to call after task is confirmed
+
+    /**
+     * Open the task prompt modal.
+     * @param {boolean} isStart   - true if we're about to start the timer
+     * @param {Function} [cb]     - optional callback to invoke after confirm/skip
+     */
+    function openTaskModal(isStart, cb) {
+      _taskModalCallback = cb || null;
+      const backdrop = document.getElementById('task-modal-backdrop');
+      const input = document.getElementById('task-modal-input');
+
+      // Pre-fill with any saved task name
+      const saved = localStorage.getItem('focusflow_last_task') || '';
+      input.value = saved;
+
+      // Update the auto-info chips from current mode
+      const focusMin = MODES.focus.minutes;
+      const breakMin = currentMode === 'long' ? MODES.long.minutes : MODES.short.minutes;
+      document.getElementById('modal-focus-dur').textContent = focusMin + ' min';
+      document.getElementById('modal-break-dur').textContent = breakMin + ' min';
+
+      // Update start button label
+      const btn = document.getElementById('task-modal-confirm');
+      btn.innerHTML = isStart ? '▶ &nbsp;Start Focusing' : '✓ &nbsp;Set Task';
+
+      backdrop.classList.add('open');
+      setTimeout(() => input.focus(), 80);
+    }
+
+    function closeTaskModal() {
+      document.getElementById('task-modal-backdrop').classList.remove('open');
+    }
+
+    function taskModalConfirm() {
+      const input = document.getElementById('task-modal-input');
+      const taskName = input.value.trim();
+      _applyTaskName(taskName || 'FocusFlow Session');
+      closeTaskModal();
+      if (_taskModalCallback) { _taskModalCallback(); _taskModalCallback = null; }
+    }
+
+    function taskModalSkip() {
+      // Keep whatever task is already set, or use default
+      const current = document.getElementById('task-name-input').value || 'FocusFlow Session';
+      _applyTaskName(current);
+      closeTaskModal();
+      if (_taskModalCallback) { _taskModalCallback(); _taskModalCallback = null; }
+    }
+
+    /** Apply a task name to the hidden input and the visible badge */
+    function _applyTaskName(name) {
+      const hidden = document.getElementById('task-name-input');
+      hidden.value = name;
+      localStorage.setItem('focusflow_last_task', name);
+
+      const badge = document.getElementById('task-badge-display');
+      const badgeIcon = document.getElementById('task-badge-icon');
+      const badgeText = document.getElementById('task-badge-text');
+
+      if (name && name !== 'FocusFlow Session') {
+        badge.className = 'task-badge';
+        badgeIcon.style.display = 'inline';
+        badgeText.textContent = name;
+      } else {
+        badge.className = 'task-badge-empty';
+        badgeIcon.style.display = 'none';
+        badgeText.textContent = '✏️  Set your task…';
+      }
+
+      // Mirror to focus overlay
+      const foLabel = document.getElementById('fo-task-label');
+      if (foLabel) foLabel.textContent = (name !== 'FocusFlow Session') ? name : '';
+    }
+
+    function _escHtml(str) {
+      // kept for compatibility but no longer used for innerHTML
+      return str;
+    }
+
+    // Keyboard handler for modal
+    document.getElementById('task-modal-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); taskModalConfirm(); }
+      if (e.key === 'Escape') { e.preventDefault(); taskModalSkip(); }
+    });
+
+    // Click backdrop to skip
+    document.getElementById('task-modal-backdrop').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('task-modal-backdrop')) taskModalSkip();
+    });
+
+    /* ─── Google Forms Helpers ─── */
+
+    /**
+     * Assemble the session payload from current timer state.
+     * @param {'completed'|'skipped'} status
+     */
+    function buildSessionData(status) {
+      const taskInput = document.getElementById('task-name-input');
+      const taskName = (taskInput && taskInput.value.trim()) || 'FocusFlow Session';
+      const breakMin = currentMode === 'long' ? MODES.long.minutes : MODES.short.minutes;
+      return {
+        taskName,
+        focusDuration: MODES.focus.minutes,
+        breakDuration: breakMin,
+        sessionsCompleted: sessionsDone + (status === 'completed' ? 1 : 0),
+        dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        status,
+      };
+    }
+
+    /**
+     * Update the cloud sync indicator state.
+     * @param {'idle'|'syncing'|'synced'|'error'} state
+     */
+    function setSyncStatus(state) {
+      const el = document.getElementById('sync-indicator');
+      const label = document.getElementById('sync-label');
+      if (!el || !label) return;
+      el.className = 'sync-indicator ' + state;
+      const labels = { idle: 'Sheets', syncing: 'Syncing…', synced: 'Synced ✓', error: 'Retry' };
+      label.textContent = labels[state] || 'Sheets';
+      // Auto-reset to idle after 4 seconds
+      if (state === 'synced' || state === 'error') {
+        clearTimeout(el._resetTimer);
+        el._resetTimer = setTimeout(() => setSyncStatus('idle'), 4000);
+      }
+    }
+
+    function enterFocusMode() {
+      // Sync task label into focus overlay
+      const taskInput = document.getElementById('task-name-input');
+      const foTaskLabel = document.getElementById('fo-task-label');
+      if (foTaskLabel && taskInput) {
+        foTaskLabel.textContent = taskInput.value.trim() || '';
+      }
+
+      // Sync focus overlay with current timer state
+      foSecondsLeft = secondsLeft;
+      foUpdateTime(foSecondsLeft);
+      foApplyMode(currentMode);
+      foRenderDots();
+      foPlay.textContent = '▶';
+
+      // Stop any running main timer
+      stopTimer();
+
+      // Show overlay
+      foOverlay.classList.add('fo-visible');
+      document.body.style.overflow = 'hidden';
+
+      // Show hint then fade it after 4s
+      foHint.style.opacity = '1';
+      clearTimeout(foHint._fadeTimer);
+      foHint._fadeTimer = setTimeout(() => { foHint.style.opacity = '0'; }, 4000);
+
+      // Attempt fullscreen
+      try {
+        const el = document.documentElement;
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      } catch (e) { }
+
+      // Auto-start after transition
+      setTimeout(() => foStart(), 700);
+    }
+
+    function exitFocusMode() {
+      foStop();
+      foOverlay.classList.remove('fo-visible');
+      document.body.style.overflow = '';
+      // sync main timer
+      secondsLeft = foSecondsLeft;
+      updateDisplay();
+
+      // Exit fullscreen
+      try {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      } catch (e) { }
+    }
+
+    function heroStartClick() {
+      const taskVal = document.getElementById('task-name-input').value.trim();
+      const noTask = !taskVal || taskVal === 'FocusFlow Session';
+      if (currentMode === 'focus' && noTask) {
+        openTaskModal(true, () => enterFocusMode());
+      } else {
+        enterFocusMode();
+      }
+    }
+
+    /* Keyboard shortcuts */
+    document.addEventListener('keydown', (e) => {
+      if (!foOverlay.classList.contains('fo-visible')) return;
+      if (e.code === 'Space') { e.preventDefault(); focusToggle(); }
+      if (e.code === 'Escape') { exitFocusMode(); }
+      // show hint briefly on any key
+      foHint.style.opacity = '1';
+      clearTimeout(foHint._fadeTimer);
+      foHint._fadeTimer = setTimeout(() => { foHint.style.opacity = '0'; }, 3000);
+    });
+
+    /* Exit fullscreen also triggers exit */
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && foOverlay.classList.contains('fo-visible')) {
+        exitFocusMode();
+      }
+    });
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    /* Intersection Observer for feature box animations */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.feature-box, .step').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(24px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+
+    /* Init */
+    applyMode('focus');
+    updateDisplay();
+
+    /* ─── Spotify Playlist Customization ─── */
+    function togglePlaylistEditor() {
+      const editor = document.getElementById('playlist-editor');
+      const backdrop = document.getElementById('playlist-editor-backdrop');
+      const input = document.getElementById('playlist-input');
+
+      if (editor.style.display === 'none') {
+        editor.style.display = 'block';
+        backdrop.classList.add('active');
+        input.focus();
+      } else {
+        editor.style.display = 'none';
+        backdrop.classList.remove('active');
+      }
+    }
+
+    function closePlaylistEditor() {
+      const editor = document.getElementById('playlist-editor');
+      const backdrop = document.getElementById('playlist-editor-backdrop');
+      editor.style.display = 'none';
+      backdrop.classList.remove('active');
+    }
+
+    function extractPlaylistId(input) {
+      // Handle full Spotify URL: https://open.spotify.com/playlist/PLAYLIST_ID
+      const urlMatch = input.match(/(?:spotify\.com\/playlist\/|\/playlist\/)([a-zA-Z0-9]+)/);
+      if (urlMatch) return urlMatch[1];
+
+      // Handle direct playlist ID (alphanumeric string)
+      if (/^[a-zA-Z0-9]{22}$/.test(input.trim())) return input.trim();
+
+      return null;
+    }
+
+    function applyPlaylist() {
+      const input = document.getElementById('playlist-input').value.trim();
+
+      if (!input) {
+        showToast('Please enter a playlist URL or ID');
+        return;
+      }
+
+      const playlistId = extractPlaylistId(input);
+
+      if (!playlistId) {
+        showToast('❌ Invalid Spotify playlist URL or ID');
+        return;
+      }
+
+      // Update the iframe src
+      const iframe = document.getElementById('spotify-iframe');
+      iframe.src = `https://open.spotify.com/embed/playlist/${playlistId}`;
+
+      // Save to localStorage
+      localStorage.setItem('spotifyPlaylistId', playlistId);
+
+      showToast('✅ Playlist updated successfully!');
+      togglePlaylistEditor();
+    }
+
+    // Load saved playlist on page load
+    function loadSavedPlaylist() {
+      const savedId = localStorage.getItem('spotifyPlaylistId');
+      if (savedId) {
+        const iframe = document.getElementById('spotify-iframe');
+        iframe.src = `https://open.spotify.com/embed/playlist/${savedId}`;
+      }
+    }
+
+    // Allow Enter key to apply playlist
+    document.getElementById('playlist-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') applyPlaylist();
+    });
+
+    // Allow Escape key to close editor
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePlaylistEditor();
+    });
+
+    // Restore saved task name on page load
+    (function () {
+      const saved = localStorage.getItem('focusflow_last_task');
+      if (saved) _applyTaskName(saved);
+    })();
+
+    // Load saved playlist when page loads
+    loadSavedPlaylist();
+  </script>
+
+</body>
+
+</html>
