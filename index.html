@@ -1,365 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="FocusFlow — A premium Pomodoro productivity timer to help you study smarter, beat procrastination, and stay in flow." />
-
+    content="FocusFlow — A premium Pomodoro productivity timer with custom durations, session history, analytics, and dark/light mode." />
   <title>FocusFlow · Pomodoro Productivity Timer</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" />
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&family=Space+Mono:wght@400;700&display=swap" />
   <link rel="stylesheet" href="style.css" />
 
   <!-- Google Forms Integration Module -->
   <script src="googleForms.js"></script>
-
-  <style>
-    /* ── Task Prompt Modal ───────────────────────────────────────────────── */
-    .task-modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      z-index: 9000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-    }
-
-    .task-modal-backdrop.open {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .task-modal {
-      background: linear-gradient(135deg, rgba(30, 20, 60, 0.98) 0%, rgba(15, 10, 40, 0.98) 100%);
-      border: 1px solid rgba(124, 58, 237, 0.35);
-      border-radius: 24px;
-      padding: 40px 36px 32px;
-      width: min(480px, calc(100vw - 40px));
-      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 60px rgba(124, 58, 237, 0.2);
-      transform: translateY(20px) scale(0.97);
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      position: relative;
-    }
-
-    .task-modal-backdrop.open .task-modal {
-      transform: translateY(0) scale(1);
-    }
-
-    .task-modal-icon {
-      font-size: 2.4rem;
-      margin-bottom: 12px;
-      display: block;
-      text-align: center;
-      animation: icon-float 3s ease-in-out infinite;
-    }
-
-    @keyframes icon-float {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-6px);
-      }
-    }
-
-    .task-modal h3 {
-      text-align: center;
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #f1f5f9;
-      margin: 0 0 6px;
-      letter-spacing: -0.02em;
-    }
-
-    .task-modal .task-modal-sub {
-      text-align: center;
-      font-size: 0.82rem;
-      color: rgba(255, 255, 255, 0.4);
-      margin-bottom: 28px;
-      line-height: 1.5;
-    }
-
-    .task-modal-field {
-      position: relative;
-      margin-bottom: 20px;
-    }
-
-    .task-modal-field label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.45);
-      margin-bottom: 8px;
-    }
-
-    .task-modal-input {
-      width: 100%;
-      box-sizing: border-box;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1.5px solid rgba(124, 58, 237, 0.4);
-      border-radius: 14px;
-      color: #f1f5f9;
-      font-family: 'Inter', sans-serif;
-      font-size: 1rem;
-      font-weight: 500;
-      padding: 13px 16px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    }
-
-    .task-modal-input::placeholder {
-      color: rgba(255, 255, 255, 0.25);
-    }
-
-    .task-modal-input:focus {
-      border-color: var(--accent, #7c3aed);
-      background: rgba(255, 255, 255, 0.1);
-      box-shadow: 0 0 0 4px var(--accent-glow, rgba(124, 58, 237, 0.25));
-    }
-
-    .task-modal-info-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 28px;
-    }
-
-    .task-modal-info-chip {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 10px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .task-modal-info-chip .chip-label {
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.35);
-    }
-
-    .task-modal-info-chip .chip-value {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--accent, #7c3aed);
-    }
-
-    .task-modal-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .task-modal-skip {
-      flex: 0 0 auto;
-      background: transparent;
-      border: 1.5px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      color: rgba(255, 255, 255, 0.4);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 500;
-      padding: 12px 18px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-    }
-
-    .task-modal-skip:hover {
-      border-color: rgba(255, 255, 255, 0.25);
-      color: rgba(255, 255, 255, 0.65);
-    }
-
-    .task-modal-start {
-      flex: 1;
-      background: linear-gradient(135deg, var(--accent, #7c3aed), #6d28d9);
-      border: none;
-      border-radius: 12px;
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      padding: 13px 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      letter-spacing: 0.02em;
-      box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-
-    .task-modal-start:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 28px rgba(124, 58, 237, 0.55);
-    }
-
-    .task-modal-start:active {
-      transform: translateY(0);
-    }
-
-    .task-modal-enter-hint {
-      text-align: center;
-      font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.2);
-      margin-top: 14px;
-    }
-
-    .task-modal-enter-hint kbd {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 5px;
-      padding: 1px 5px;
-      font-size: 0.68rem;
-    }
-
-    /* ── Task Badge (shown in timer card after task is set) ──────────────── */
-    .task-badge-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 2px 14px;
-      min-height: 32px;
-    }
-
-    .task-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(124, 58, 237, 0.15);
-      border: 1px solid rgba(124, 58, 237, 0.3);
-      border-radius: 20px;
-      padding: 4px 12px 4px 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.8);
-      max-width: 260px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .task-badge:hover {
-      background: rgba(124, 58, 237, 0.25);
-      border-color: rgba(124, 58, 237, 0.5);
-    }
-
-    .task-badge .badge-icon {
-      font-size: 0.9rem;
-      flex-shrink: 0;
-    }
-
-    .task-badge-empty {
-      font-size: 0.78rem;
-      color: rgba(255, 255, 255, 0.25);
-      font-style: italic;
-      cursor: pointer;
-      padding: 4px 8px;
-    }
-
-    .task-badge-empty:hover {
-      color: rgba(255, 255, 255, 0.45);
-    }
-
-    /* ── Cloud Sync Indicator ────────────────────────────────────────────── */
-    .sync-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.3);
-      white-space: nowrap;
-      transition: color 0.4s;
-    }
-
-    .sync-indicator .sync-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18);
-      transition: background 0.4s;
-      flex-shrink: 0;
-    }
-
-    .sync-indicator.syncing .sync-dot {
-      background: #f59e0b;
-      animation: pulse-dot 0.9s ease-in-out infinite;
-    }
-
-    .sync-indicator.synced .sync-dot {
-      background: #34d399;
-    }
-
-    .sync-indicator.synced {
-      color: #34d399;
-    }
-
-    .sync-indicator.error .sync-dot {
-      background: #f87171;
-    }
-
-    .sync-indicator.error {
-      color: #f87171;
-    }
-
-    @keyframes pulse-dot {
-
-      0%,
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      50% {
-        opacity: 0.5;
-        transform: scale(1.4);
-      }
-    }
-
-    /* ── Focus Overlay Task Label ────────────────────────────────────────── */
-    .fo-task-label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.55);
-      letter-spacing: 0.04em;
-      margin-bottom: 10px;
-      min-height: 1.2em;
-      text-align: center;
-      transition: color 0.3s;
-    }
-  </style>
 </head>
 
 <body>
-  <!-- Spotify Playlist Section -->
+
+  <!-- ── Confetti Canvas ── -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- ── Spotify Playlist Section ── -->
   <div class="spotify-section">
     <div class="spotify-container">
       <div id="spotify-player" class="spotify-player">
         <iframe id="spotify-iframe" style="border-radius:12px"
-          src="https://open.spotify.com/embed/playlist/37i9dQZF1Fa1IIVtEpGUcU" width="100%" height="152" frameBorder="0"
-          allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+          src="https://open.spotify.com/embed/playlist/37i9dQZF1Fa1IIVtEpGUcU" width="100%" height="152"
+          frameBorder="0" allowfullscreen=""
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
         </iframe>
       </div>
       <button class="spotify-toggle" id="spotify-toggle" onclick="togglePlaylistEditor()"
@@ -367,10 +38,10 @@
     </div>
   </div>
 
-  <!-- Playlist Editor Backdrop -->
+  <!-- ── Playlist Editor Backdrop ── -->
   <div id="playlist-editor-backdrop" class="playlist-editor-backdrop" onclick="closePlaylistEditor()"></div>
 
-  <!-- Playlist Editor Modal -->
+  <!-- ── Playlist Editor Modal ── -->
   <div id="playlist-editor" class="playlist-editor" style="display: none;">
     <div class="editor-content">
       <h3>Add Your Spotify Playlist</h3>
@@ -379,23 +50,26 @@
         <input type="text" id="playlist-input" class="playlist-input"
           placeholder="https://open.spotify.com/playlist/... or playlist ID" aria-label="Spotify playlist URL or ID" />
         <div class="editor-button-group">
-          <button class="editor-btn editor-btn-apply" onclick="applyPlaylist()"
-            aria-label="Apply playlist">Apply</button>
-          <button class="editor-btn editor-btn-cancel" onclick="closePlaylistEditor()"
-            aria-label="Close editor">Cancel</button>
+          <button class="editor-btn editor-btn-apply" onclick="applyPlaylist()" aria-label="Apply playlist">Apply</button>
+          <button class="editor-btn editor-btn-cancel" onclick="closePlaylistEditor()" aria-label="Close editor">Cancel</button>
         </div>
       </div>
       <div class="editor-hint">💡 Copy the playlist link from Spotify and paste it above</div>
     </div>
   </div>
 
-  <!-- Animated Particle Canvas -->
+  <!-- ── Animated Particle Canvas ── -->
   <canvas id="particles"></canvas>
 
-  <!-- Toast Notification -->
-  <div id="toast" role="status" aria-live="polite"></div>
+  <!-- ── Toast Notification ── -->
+  <div id="toast" role="status" aria-live="polite">
+    <span id="toast-text"></span>
+    <button class="toast-cancel-btn" id="toast-cancel" onclick="cancelAutoStart()">Cancel</button>
+  </div>
 
-  <!-- ── Task Prompt Modal ── -->
+  <!-- ═══════════════════════════════════════════════════════
+       TASK PROMPT MODAL
+       ═══════════════════════════════════════════════════════ -->
   <div id="task-modal-backdrop" class="task-modal-backdrop" role="dialog" aria-modal="true"
     aria-labelledby="task-modal-title">
     <div class="task-modal" id="task-modal">
@@ -405,8 +79,27 @@
 
       <div class="task-modal-field">
         <label for="task-modal-input">Task Name</label>
-        <input type="text" id="task-modal-input" class="task-modal-input" placeholder="e.g. Math Revision, Chapter 3…"
-          maxlength="100" autocomplete="off" spellcheck="false" />
+        <input type="text" id="task-modal-input" class="task-modal-input"
+          placeholder="e.g. Math Revision, Chapter 3…" maxlength="80" autocomplete="off" spellcheck="false" />
+      </div>
+
+      <!-- Recent task chips -->
+      <div class="recent-tasks-row" id="recent-tasks-row" style="display:none;">
+        <div class="recent-tasks-label">Recent Tasks</div>
+        <div class="recent-task-chips" id="recent-task-chips"></div>
+      </div>
+
+      <!-- Task color selector -->
+      <div class="task-color-row">
+        <span class="task-color-label">Color</span>
+        <div class="task-color-options" id="task-color-options">
+          <div class="task-color-dot selected" data-color="#7c3aed" style="background:#7c3aed;" title="Purple"></div>
+          <div class="task-color-dot" data-color="#059669" style="background:#059669;" title="Green"></div>
+          <div class="task-color-dot" data-color="#0284c7" style="background:#0284c7;" title="Blue"></div>
+          <div class="task-color-dot" data-color="#dc2626" style="background:#dc2626;" title="Red"></div>
+          <div class="task-color-dot" data-color="#d97706" style="background:#d97706;" title="Amber"></div>
+          <div class="task-color-dot" data-color="#db2777" style="background:#db2777;" title="Pink"></div>
+        </div>
       </div>
 
       <div class="task-modal-info-row">
@@ -429,7 +122,176 @@
     </div>
   </div>
 
-  <!-- ── Focus Overlay ── -->
+  <!-- ═══════════════════════════════════════════════════════
+       SETTINGS MODAL
+       ═══════════════════════════════════════════════════════ -->
+  <div id="settings-backdrop" class="settings-backdrop" role="dialog" aria-modal="true"
+    aria-labelledby="settings-title">
+    <div class="settings-panel" id="settings-panel">
+      <div class="settings-header">
+        <div class="settings-title" id="settings-title">⚙️ Timer Settings</div>
+        <button class="settings-close" onclick="closeSettings()" aria-label="Close settings">✕</button>
+      </div>
+
+      <!-- Durations -->
+      <div class="settings-section">
+        <div class="settings-section-title">⏱ Session Durations</div>
+        <div class="duration-grid">
+          <div class="duration-field">
+            <label for="set-focus">Focus</label>
+            <div class="duration-input-wrap">
+              <input type="number" id="set-focus" min="1" max="120" value="25" aria-label="Focus duration" />
+              <span class="dur-unit">min</span>
+              <div class="duration-stepper">
+                <button class="dur-step-btn" onclick="stepDuration('set-focus', 1)" aria-label="Increase">▲</button>
+                <button class="dur-step-btn" onclick="stepDuration('set-focus', -1)" aria-label="Decrease">▼</button>
+              </div>
+            </div>
+          </div>
+          <div class="duration-field">
+            <label for="set-short">Short Break</label>
+            <div class="duration-input-wrap">
+              <input type="number" id="set-short" min="1" max="60" value="5" aria-label="Short break duration" />
+              <span class="dur-unit">min</span>
+              <div class="duration-stepper">
+                <button class="dur-step-btn" onclick="stepDuration('set-short', 1)" aria-label="Increase">▲</button>
+                <button class="dur-step-btn" onclick="stepDuration('set-short', -1)" aria-label="Decrease">▼</button>
+              </div>
+            </div>
+          </div>
+          <div class="duration-field">
+            <label for="set-long">Long Break</label>
+            <div class="duration-input-wrap">
+              <input type="number" id="set-long" min="1" max="90" value="15" aria-label="Long break duration" />
+              <span class="dur-unit">min</span>
+              <div class="duration-stepper">
+                <button class="dur-step-btn" onclick="stepDuration('set-long', 1)" aria-label="Increase">▲</button>
+                <button class="dur-step-btn" onclick="stepDuration('set-long', -1)" aria-label="Decrease">▼</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Behaviour -->
+      <div class="settings-section">
+        <div class="settings-section-title">🔄 Behaviour</div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <span>Long break after</span>
+            <span>Sessions before a long break starts</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" class="sessions-input" id="set-sessions-before-long" min="1" max="10" value="4"
+              aria-label="Sessions before long break" />
+            <span style="font-size:0.8rem;color:var(--text-muted);">sessions</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <span>Auto-start next session</span>
+            <span>Timer starts automatically after a mode switch</span>
+          </div>
+          <label class="toggle-switch" aria-label="Auto-start toggle">
+            <input type="checkbox" id="set-auto-start" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <span>Daily goal</span>
+            <span>Target focus sessions per day</span>
+          </div>
+          <div class="goal-input-row">
+            <input type="number" class="goal-input" id="set-daily-goal" min="1" max="20" value="8"
+              aria-label="Daily goal sessions" />
+            <span class="goal-input-label">sessions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sound -->
+      <div class="settings-section">
+        <div class="settings-section-title">🔔 Notification Sound</div>
+        <div class="sound-grid" id="sound-grid">
+          <label class="sound-option selected" data-sound="bell">
+            <input type="radio" name="sound" value="bell" checked />
+            <span class="sound-option-label">🔔 Bell</span>
+            <button class="sound-preview-btn" onclick="previewSound('bell', event)" aria-label="Preview bell">▶</button>
+          </label>
+          <label class="sound-option" data-sound="chime">
+            <input type="radio" name="sound" value="chime" />
+            <span class="sound-option-label">🎵 Chime</span>
+            <button class="sound-preview-btn" onclick="previewSound('chime', event)" aria-label="Preview chime">▶</button>
+          </label>
+          <label class="sound-option" data-sound="digital">
+            <input type="radio" name="sound" value="digital" />
+            <span class="sound-option-label">📡 Digital</span>
+            <button class="sound-preview-btn" onclick="previewSound('digital', event)" aria-label="Preview digital">▶</button>
+          </label>
+          <label class="sound-option" data-sound="silent">
+            <input type="radio" name="sound" value="silent" />
+            <span class="sound-option-label">🔇 Silent</span>
+            <button class="sound-preview-btn" onclick="previewSound('silent', event)" aria-label="Preview silent" style="opacity:0.3;cursor:not-allowed">—</button>
+          </label>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="settings-section">
+        <div class="settings-section-title">🎨 Appearance</div>
+        <div class="settings-row">
+          <div class="settings-row-label">
+            <span>Light mode</span>
+            <span>Switch between dark and light themes</span>
+          </div>
+          <label class="toggle-switch" aria-label="Light mode toggle">
+            <input type="checkbox" id="set-light-mode" onchange="applyTheme()" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-save-row">
+        <button class="settings-save-btn" onclick="saveSettings()" id="settings-save-btn">✓ Save Settings</button>
+        <button class="settings-reset-btn" onclick="resetSettings()" title="Reset to defaults">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SIDE PANEL (History + Analytics)
+       ═══════════════════════════════════════════════════════ -->
+  <div id="side-panel-overlay" class="side-panel-overlay" onclick="closeSidePanel()"></div>
+
+  <div id="side-panel" class="side-panel" role="dialog" aria-modal="true" aria-label="History and Analytics">
+    <div class="side-panel-header">
+      <div class="side-panel-top">
+        <div class="side-panel-title" id="side-panel-title">📋 History & Analytics</div>
+        <button class="side-panel-close" onclick="closeSidePanel()" aria-label="Close panel">✕</button>
+      </div>
+      <div class="panel-tabs" role="tablist">
+        <button class="panel-tab active" id="tab-history" role="tab" aria-selected="true"
+          onclick="switchPanelTab('history')">📋 History</button>
+        <button class="panel-tab" id="tab-analytics" role="tab" aria-selected="false"
+          onclick="switchPanelTab('analytics')">📊 Analytics</button>
+      </div>
+    </div>
+
+    <!-- History Content -->
+    <div class="panel-content" id="panel-history">
+      <div id="history-inner"></div>
+    </div>
+
+    <!-- Analytics Content -->
+    <div class="panel-content" id="panel-analytics" style="display:none;">
+      <div id="analytics-inner"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FOCUS OVERLAY
+       ═══════════════════════════════════════════════════════ -->
   <div id="focus-overlay" aria-modal="true" role="dialog" aria-label="Deep focus mode">
     <!-- Ambient floating orbs -->
     <div class="fo-orb fo-orb1"></div>
@@ -443,7 +305,6 @@
 
     <!-- Centre content -->
     <div class="fo-center">
-
       <!-- Session badge -->
       <div class="fo-session-badge" id="fo-session-badge">🎯 FOCUS SESSION</div>
 
@@ -456,10 +317,7 @@
           <defs>
             <filter id="glow-filter">
               <feGaussianBlur stdDeviation="6" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
           </defs>
           <circle class="fo-ring-bg" cx="170" cy="170" r="155" />
@@ -491,7 +349,9 @@
     <div class="fo-flash" id="fo-flash"></div>
   </div>
 
-  <!-- ── Navbar ── -->
+  <!-- ═══════════════════════════════════════════════════════
+       NAVBAR
+       ═══════════════════════════════════════════════════════ -->
   <nav class="navbar" role="navigation" aria-label="Main navigation">
     <h1 class="logo">FocusFlow</h1>
     <ul class="nav-links">
@@ -499,9 +359,21 @@
       <li><a href="#features-section">Features</a></li>
       <li><a href="#how-section">How It Works</a></li>
     </ul>
+    <div class="nav-actions">
+      <button class="nav-icon-btn" id="nav-history-btn" onclick="openSidePanel('history')"
+        title="Session History" aria-label="Session History">📋</button>
+      <button class="nav-icon-btn" id="nav-analytics-btn" onclick="openSidePanel('analytics')"
+        title="Analytics" aria-label="Analytics">📊</button>
+      <button class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()"
+        title="Toggle dark/light mode" aria-label="Toggle theme">🌙</button>
+      <button class="nav-icon-btn" id="nav-settings-btn" onclick="openSettings()"
+        title="Timer Settings" aria-label="Timer Settings">⚙️</button>
+    </div>
   </nav>
 
-  <!-- ── Hero ── -->
+  <!-- ═══════════════════════════════════════════════════════
+       HERO + TIMER CARD
+       ═══════════════════════════════════════════════════════ -->
   <section class="hero" id="timer-section" aria-label="Hero and timer">
 
     <div class="hero-content">
@@ -531,11 +403,10 @@
 
       <!-- Task Badge + Sync row -->
       <div class="task-badge-wrap">
-        <!-- Hidden input keeps existing buildSessionData() working unchanged -->
         <input type="hidden" id="task-name-input" />
         <div id="task-badge-display" class="task-badge-empty" onclick="openTaskModal(false)" title="Click to set task">
           <span id="task-badge-icon" style="display:none;font-size:0.9rem;">🎯</span>
-          <span id="task-badge-text">✏️  Set your task…</span>
+          <span id="task-badge-text">✏️  Set your task…</span>
         </div>
         <div class="sync-indicator" id="sync-indicator" title="Google Sheets sync status">
           <span class="sync-dot"></span>
@@ -573,10 +444,25 @@
         <button class="ctrl-btn" id="skip-btn" onclick="skipSession()" aria-label="Skip session">⏭ Skip</button>
       </div>
 
+      <!-- Card Action Row -->
+      <div class="card-action-row">
+        <button class="card-action-btn highlight" onclick="heroStartClick()" id="deep-focus-btn"
+          title="Enter full-screen focus mode">🎯 Deep Focus</button>
+        <button class="card-action-btn" onclick="openSidePanel('history')" title="View session history">📋 History</button>
+        <button class="card-action-btn" onclick="openSettings()" title="Timer settings">⚙️ Settings</button>
+      </div>
+
       <!-- Stats -->
       <div class="session-info" role="region" aria-label="Session statistics">
         <div class="session-stat">
-          <span class="stat-value" id="sessions-count">0</span>
+          <div class="goal-ring-wrap">
+            <svg class="goal-ring-svg" viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="goal-ring-track" cx="26" cy="26" r="22" />
+              <circle class="goal-ring-progress" cx="26" cy="26" r="22" id="goal-ring-progress" />
+            </svg>
+            <span class="stat-value" id="sessions-count">0</span>
+            <span class="achievement-badge" id="achievement-badge" title="Daily goal reached!">🏆</span>
+          </div>
           <span class="stat-label">Sessions</span>
         </div>
         <div class="session-stat">
@@ -601,38 +487,38 @@
 
     <div class="feature-box" tabindex="0">
       <span class="feature-icon">⏱️</span>
-      <h2>Smart Timer</h2>
-      <p>Auto-switching between focus and break sessions keeps your rhythm without any manual effort.</p>
+      <h2>Custom Timer</h2>
+      <p>Set your own focus and break durations. Work the way that suits you best — from sprint sessions to deep flows.</p>
     </div>
 
     <div class="feature-box" tabindex="0">
       <span class="feature-icon">📊</span>
-      <h2>Session Tracking</h2>
-      <p>Monitor your completed sessions, daily streak, and total minutes focused in real-time.</p>
+      <h2>Daily Analytics</h2>
+      <p>Visualise your 7-day focus history with bar charts and heatmaps. See your productivity patterns at a glance.</p>
     </div>
 
     <div class="feature-box" tabindex="0">
       <span class="feature-icon">🔔</span>
-      <h2>Break Reminders</h2>
-      <p>Reduces mental fatigue through intelligently scheduled short and long breaks.</p>
+      <h2>Sound Notifications</h2>
+      <p>Beautiful bell, chime, or digital alerts synthesised in real-time — no external audio files needed.</p>
     </div>
 
     <div class="feature-box" tabindex="0">
       <span class="feature-icon">🌙</span>
-      <h2>Dark Mode Design</h2>
-      <p>Easy on the eyes during late-night study sessions with a premium dark glassmorphism UI.</p>
+      <h2>Dark & Light Mode</h2>
+      <p>Instantly switch between premium dark glassmorphism and a bright, clean light theme. Your preference is saved.</p>
     </div>
 
     <div class="feature-box" tabindex="0">
       <span class="feature-icon">🎯</span>
       <h2>Deep Focus Mode</h2>
-      <p>Minimalist interface lets you concentrate without distracting chrome or clutter.</p>
+      <p>Full-screen immersive overlay blocks distractions so you can concentrate without any UI clutter.</p>
     </div>
 
     <div class="feature-box" tabindex="0">
       <span class="feature-icon">⚡</span>
-      <h2>Streak System</h2>
-      <p>Build momentum with a streak counter that tracks your consecutive focused sessions.</p>
+      <h2>Auto-Start & Streaks</h2>
+      <p>Auto-start the next session and build momentum with streaks and daily goal tracking — hit your 🏆 every day.</p>
     </div>
   </section>
 
@@ -651,7 +537,7 @@
 
       <div class="step">
         <div class="step-num">2</div>
-        <h3>Work 25 Minutes</h3>
+        <h3>Work & Focus</h3>
         <p>Focus intensely until the timer rings. No distractions.</p>
       </div>
       <div class="steps-connector"><span></span></div>
@@ -659,29 +545,35 @@
       <div class="step">
         <div class="step-num">3</div>
         <h3>Short Break</h3>
-        <p>Take a 5-minute rest to recharge your attention.</p>
+        <p>Take a short rest to recharge your attention.</p>
       </div>
       <div class="steps-connector"><span></span></div>
 
       <div class="step">
         <div class="step-num">4</div>
-        <h3>Repeat &amp; Thrive</h3>
-        <p>Every 4 sessions earn a longer 15-minute break.</p>
+        <h3>Repeat & Thrive</h3>
+        <p>Every N sessions earn a longer break. Hit your daily goal!</p>
       </div>
     </div>
   </section>
-  <!-- ── JavaScript ── -->
+
+  <footer>
+    <p>Made with ❤️ · <a href="#timer-section">Start Focusing</a></p>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════
+       JAVASCRIPT
+       ═══════════════════════════════════════════════════════ -->
   <script>
-    /* ─── Particle Background ─── */
+    /* ════════════════════════════════════════════════════
+       PARTICLE BACKGROUND
+       ════════════════════════════════════════════════════ */
     (function () {
       const canvas = document.getElementById('particles');
       const ctx = canvas.getContext('2d');
       let W, H, particles;
 
-      function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-      }
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
 
       function Particle() {
         this.x = Math.random() * W;
@@ -695,83 +587,156 @@
       }
 
       Particle.prototype.update = function () {
-        this.x += this.vx;
-        this.y += this.vy;
-        if (this.x < 0) this.x = W;
-        if (this.x > W) this.x = 0;
-        if (this.y < 0) this.y = H;
-        if (this.y > H) this.y = 0;
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < 0) this.x = W; if (this.x > W) this.x = 0;
+        if (this.y < 0) this.y = H; if (this.y > H) this.y = 0;
       };
 
       Particle.prototype.draw = function () {
-        ctx.save();
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color;
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
       };
 
-      function init() {
-        resize();
-        particles = Array.from({ length: 80 }, () => new Particle());
-      }
+      function init() { resize(); particles = Array.from({ length: 80 }, () => new Particle()); }
+      function loop() { ctx.clearRect(0, 0, W, H); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(loop); }
 
-      function loop() {
-        ctx.clearRect(0, 0, W, H);
-        particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(loop);
-      }
-
-      window.addEventListener('resize', resize);
-      init();
-      loop();
+      window.addEventListener('resize', resize); init(); loop();
     })();
 
-    /* ─── Timer Logic ─── */
-    const MODES = {
-      focus: { label: 'FOCUS TIME', minutes: 25, accent: '#7c3aed', glow: 'rgba(124,58,237,0.35)' },
-      short: { label: 'SHORT BREAK', minutes: 5, accent: '#059669', glow: 'rgba(5,150,105,0.35)' },
-      long: { label: 'LONG BREAK', minutes: 15, accent: '#0284c7', glow: 'rgba(2,132,199,0.35)' },
+    /* ════════════════════════════════════════════════════
+       CONFETTI ENGINE
+       ════════════════════════════════════════════════════ */
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiRAF = null;
+
+    function resizeConfetti() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+
+    resizeConfetti();
+    window.addEventListener('resize', resizeConfetti);
+
+    function launchConfetti() {
+      confettiCanvas.classList.add('active');
+      confettiParticles = [];
+      const colors = ['#7c3aed', '#a78bfa', '#818cf8', '#38bdf8', '#34d399', '#f59e0b', '#f87171', '#fbbf24'];
+      for (let i = 0; i < 120; i++) {
+        confettiParticles.push({
+          x: Math.random() * confettiCanvas.width,
+          y: -10 - Math.random() * 200,
+          r: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 3 + 2,
+          rot: Math.random() * 360,
+          rotV: (Math.random() - 0.5) * 8,
+          opacity: 1
+        });
+      }
+      if (confettiRAF) cancelAnimationFrame(confettiRAF);
+      animateConfetti();
+      setTimeout(() => { confettiCanvas.classList.remove('active'); confettiParticles = []; }, 3500);
+    }
+
+    function animateConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      let alive = false;
+      confettiParticles.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.rot += p.rotV; p.vy += 0.1;
+        if (p.y < confettiCanvas.height + 20) alive = true;
+        confettiCtx.save();
+        confettiCtx.globalAlpha = Math.max(0, p.opacity);
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rot * Math.PI / 180);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 0.5);
+        confettiCtx.restore();
+      });
+      if (alive) confettiRAF = requestAnimationFrame(animateConfetti);
+    }
+
+    /* ════════════════════════════════════════════════════
+       SETTINGS & STATE
+       ════════════════════════════════════════════════════ */
+
+    const DEFAULT_SETTINGS = {
+      focusDuration: 25,
+      shortBreakDuration: 5,
+      longBreakDuration: 15,
+      sessionsBeforeLongBreak: 4,
+      autoStart: false,
+      sound: 'bell',
+      theme: 'dark',
+      dailyGoal: 8
     };
 
-    let currentMode = 'focus';
-    let totalSeconds = MODES.focus.minutes * 60;
-    let secondsLeft = totalSeconds;
-    let isRunning = false;
-    let intervalId = null;
-    let sessionsDone = 0;
-    let streak = 0;
-    let minutesFocused = 0;
+    let settings = Object.assign({}, DEFAULT_SETTINGS);
 
-    const timerDisplay = document.getElementById('timer-display');
-    const timerLabel = document.getElementById('timer-label');
-    const startPauseBtn = document.getElementById('start-pause-btn');
-    const ringProgress = document.getElementById('ring-progress');
-    const sessionsCount = document.getElementById('sessions-count');
-    const streakCount = document.getElementById('streak-count');
+    function loadSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('focusflow_settings') || 'null');
+        if (saved) settings = Object.assign({}, DEFAULT_SETTINGS, saved);
+      } catch (e) { }
+    }
+
+    function persistSettings() {
+      localStorage.setItem('focusflow_settings', JSON.stringify(settings));
+    }
+
+    function getModes() {
+      return {
+        focus: { label: 'FOCUS TIME',   minutes: settings.focusDuration,      accent: '#7c3aed', glow: 'rgba(124,58,237,0.35)' },
+        short: { label: 'SHORT BREAK',  minutes: settings.shortBreakDuration,  accent: '#059669', glow: 'rgba(5,150,105,0.35)' },
+        long:  { label: 'LONG BREAK',   minutes: settings.longBreakDuration,   accent: '#0284c7', glow: 'rgba(2,132,199,0.35)' },
+      };
+    }
+
+    let MODES = getModes();
+
+    /* ── Timer State ── */
+    let currentMode    = 'focus';
+    let totalSeconds   = MODES.focus.minutes * 60;
+    let secondsLeft    = totalSeconds;
+    let isRunning      = false;
+    let intervalId     = null;
+    let sessionsDone   = 0;
+    let streak         = 0;
+    let secondsFocused = 0;
+    let goalReached    = false;
+    let autoStartTimer = null;
+
+    /* ── DOM ── */
+    const timerDisplay   = document.getElementById('timer-display');
+    const timerLabel     = document.getElementById('timer-label');
+    const startPauseBtn  = document.getElementById('start-pause-btn');
+    const ringProgress   = document.getElementById('ring-progress');
+    const sessionsCount  = document.getElementById('sessions-count');
+    const streakCount    = document.getElementById('streak-count');
     const minutesFocusedEl = document.getElementById('minutes-focused');
-    const timerCard = document.getElementById('timer-card');
-    const toast = document.getElementById('toast');
+    const timerCard      = document.getElementById('timer-card');
+    const toastEl        = document.getElementById('toast');
+    const toastText      = document.getElementById('toast-text');
+    const toastCancel    = document.getElementById('toast-cancel');
+    const goalRingProgress = document.getElementById('goal-ring-progress');
+    const achievementBadge = document.getElementById('achievement-badge');
 
-    const CIRCUMFERENCE = 2 * Math.PI * 100; // r=100
+    const CIRCUMFERENCE = 2 * Math.PI * 100;
+    const GOAL_CIRCUMFERENCE = 2 * Math.PI * 22;
 
     function formatTime(s) {
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
+      const m = Math.floor(s / 60), sec = s % 60;
       return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
     }
 
-    /** Format total focused seconds as MM:SS or HH:MM:SS */
     function formatFocusedTime(totalSec) {
       const h = Math.floor(totalSec / 3600);
       const m = Math.floor((totalSec % 3600) / 60);
       const sec = totalSec % 60;
-      if (h > 0) {
-        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-      }
-      return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+      return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
     }
 
     function updateRing() {
@@ -783,7 +748,6 @@
     function updateDisplay() {
       timerDisplay.textContent = formatTime(secondsLeft);
       updateRing();
-      // pulse tick
       timerDisplay.classList.remove('tick');
       void timerDisplay.offsetWidth;
       timerDisplay.classList.add('tick');
@@ -794,57 +758,62 @@
       document.documentElement.style.setProperty('--accent', m.accent);
       document.documentElement.style.setProperty('--accent-glow', m.glow);
       timerLabel.textContent = m.label;
+      timerLabel.classList.remove('paused-label');
       timerCard.style.boxShadow = `0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.5), 0 0 80px ${m.glow}`;
     }
 
-    function setMode(mode) {
-      if (isRunning) { stopTimer(); }
+    function setMode(mode, fromInternal) {
+      if (isRunning && !fromInternal) { stopTimer(); }
       currentMode = mode;
+      MODES = getModes();
       totalSeconds = MODES[mode].minutes * 60;
       secondsLeft = totalSeconds;
 
-      // tab UI
       document.querySelectorAll('.mode-tab').forEach(t => {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected', 'false');
+        t.classList.remove('active'); t.setAttribute('aria-selected', 'false');
       });
       const activeTab = document.getElementById('tab-' + mode);
-      activeTab.classList.add('active');
-      activeTab.setAttribute('aria-selected', 'true');
+      if (activeTab) { activeTab.classList.add('active'); activeTab.setAttribute('aria-selected', 'true'); }
 
       applyMode(mode);
       updateDisplay();
       startPauseBtn.textContent = '▶ Start';
+      ringProgress.classList.remove('paused');
+      document.title = `${formatTime(secondsLeft)} — FocusFlow`;
     }
 
     function stopTimer() {
-      clearInterval(intervalId);
-      intervalId = null;
-      isRunning = false;
+      clearInterval(intervalId); intervalId = null; isRunning = false;
       startPauseBtn.textContent = '▶ Start';
+      ringProgress.classList.remove('paused');
+      timerLabel.classList.remove('paused-label');
     }
 
     function startTimer() {
       isRunning = true;
       startPauseBtn.textContent = '⏸ Pause';
+      ringProgress.classList.remove('paused');
+      timerLabel.classList.remove('paused-label');
       intervalId = setInterval(() => {
         secondsLeft--;
+        document.title = `${formatTime(secondsLeft)} — FocusFlow`;
         updateDisplay();
         if (currentMode === 'focus') {
-          minutesFocused++;
-          minutesFocusedEl.textContent = formatFocusedTime(minutesFocused);
+          secondsFocused++;
+          minutesFocusedEl.textContent = formatFocusedTime(secondsFocused);
         }
-        if (secondsLeft <= 0) {
-          sessionComplete();
-        }
+        if (secondsLeft <= 0) sessionComplete();
       }, 1000);
     }
 
     function toggleTimer() {
       if (isRunning) {
         stopTimer();
+        ringProgress.classList.add('paused');
+        timerLabel.textContent = 'PAUSED';
+        timerLabel.classList.add('paused-label');
       } else {
-        // Show task modal only for a fresh focus session with no real task set
+        timerLabel.classList.remove('paused-label');
         const taskVal = document.getElementById('task-name-input').value.trim();
         const noTask = !taskVal || taskVal === 'FocusFlow Session';
         if (currentMode === 'focus' && secondsLeft === totalSeconds && noTask) {
@@ -855,24 +824,21 @@
       }
     }
 
-    function resetFocusedTime() {
-      minutesFocused = 0;
-      minutesFocusedEl.textContent = formatFocusedTime(0); // resets to "00:00"
-    }
-
     function resetTimer() {
       stopTimer();
       secondsLeft = totalSeconds;
       updateDisplay();
-      resetFocusedTime();
+      secondsFocused = 0;
+      minutesFocusedEl.textContent = formatFocusedTime(0);
       showToast('Timer reset ↺');
+      document.title = 'FocusFlow · Pomodoro Productivity Timer';
     }
 
     function skipSession() {
       stopTimer();
-      // Submit skipped focus session to Google Sheets
       if (currentMode === 'focus') {
         const data = buildSessionData('skipped');
+        recordSession({ ...data, type: currentMode, startTime: new Date().toISOString() });
         saveSessionLocally(data);
         submitSessionToGoogleForms(data).then(() => setSyncStatus('synced')).catch(() => setSyncStatus('error'));
         setSyncStatus('syncing');
@@ -883,52 +849,526 @@
     function sessionComplete() {
       stopTimer();
       ringProgress.style.strokeDashoffset = CIRCUMFERENCE;
+      playNotificationSound(settings.sound);
 
       if (currentMode === 'focus') {
         sessionsDone++;
         streak++;
-        sessionsCount.textContent = sessionsDone;
-        streakCount.textContent = streak;
+        bumpStat('sessions-count', sessionsDone);
+        bumpStat('streak-count', streak);
+        updateGoalRing();
 
-        // Save & sync completed focus session
         const data = buildSessionData('completed');
+        recordSession({ ...data, type: 'focus', startTime: new Date().toISOString() });
         saveSessionLocally(data);
         setSyncStatus('syncing');
-        submitSessionToGoogleForms(data)
-          .then(() => setSyncStatus('synced'))
-          .catch(() => setSyncStatus('error'));
+        submitSessionToGoogleForms(data).then(() => setSyncStatus('synced')).catch(() => setSyncStatus('error'));
 
-        // Every 4 focus sessions → long break
-        if (sessionsDone % 4 === 0) {
-          showToast('🎉 4 sessions done! Time for a long break.');
-          setTimeout(() => setMode('long'), 1800);
-        } else {
-          showToast('✅ Focus session complete! Take a short break.');
-          setTimeout(() => setMode('short'), 1800);
-        }
+        const nextMode = (sessionsDone % settings.sessionsBeforeLongBreak === 0) ? 'long' : 'short';
+        const msg = nextMode === 'long' ? '🎉 Long break earned! Well done.' : '✅ Focus done! Time to rest.';
+        showToast(msg);
+        setTimeout(() => {
+          setMode(nextMode, true);
+          if (settings.autoStart) scheduleAutoStart();
+        }, 1800);
       } else {
-        showToast('☕ Break done! Ready to focus again?');
-        setTimeout(() => setMode('focus'), 1800);
+        const data = buildSessionData('completed');
+        recordSession({ ...data, type: currentMode, startTime: new Date().toISOString() });
+        showToast('☕ Break done! Ready to focus?');
+        setTimeout(() => {
+          setMode('focus', true);
+          if (settings.autoStart) scheduleAutoStart();
+        }, 1800);
       }
     }
 
-    /* ─── Focus Mode State ─── */
-    const FO_CIRC = 2 * Math.PI * 155; // r=155 for focus overlay ring
+    /* ── Bump animation for stats ── */
+    function bumpStat(id, val) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val;
+      el.classList.remove('bump');
+      void el.offsetWidth;
+      el.classList.add('bump');
+      setTimeout(() => el.classList.remove('bump'), 300);
+    }
+
+    /* ── Daily Goal Ring ── */
+    function updateGoalRing() {
+      const goal = settings.dailyGoal || 8;
+      const todaySessions = getTodaySessionCount();
+      const progress = Math.min(todaySessions / goal, 1);
+      const offset = GOAL_CIRCUMFERENCE * (1 - progress);
+      goalRingProgress.style.strokeDashoffset = offset;
+
+      // Achievement badge
+      if (todaySessions >= goal && !goalReached) {
+        goalReached = true;
+        achievementBadge.classList.add('show');
+        setTimeout(() => launchConfetti(), 200);
+        showToast('🏆 Daily goal reached! Amazing work!');
+      }
+    }
+
+    function getTodaySessionCount() {
+      const today = new Date().toDateString();
+      const history = getHistory();
+      return history.filter(s => s.type === 'focus' && s.status === 'completed' && new Date(s.startTime).toDateString() === today).length;
+    }
+
+    /* ════════════════════════════════════════════════════
+       AUTO-START
+       ════════════════════════════════════════════════════ */
+    let autoStartCountdown = null;
+    let autoStartCount = 3;
+
+    function scheduleAutoStart() {
+      cancelAutoStart();
+      autoStartCount = 3;
+      toastCancel.classList.add('visible');
+      runAutoStartTick();
+    }
+
+    function runAutoStartTick() {
+      if (autoStartCount <= 0) {
+        toastCancel.classList.remove('visible');
+        startTimer();
+        return;
+      }
+      showToastRaw(`⏱ Starting in ${autoStartCount}…`);
+      autoStartCount--;
+      autoStartCountdown = setTimeout(runAutoStartTick, 1000);
+    }
+
+    function cancelAutoStart() {
+      if (autoStartCountdown) { clearTimeout(autoStartCountdown); autoStartCountdown = null; }
+      toastCancel.classList.remove('visible');
+    }
+
+    /* ════════════════════════════════════════════════════
+       NOTIFICATION SOUND (Web Audio API)
+       ════════════════════════════════════════════════════ */
+    function getAudioCtx() {
+      try {
+        return new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) { return null; }
+    }
+
+    function playNotificationSound(type) {
+      if (type === 'silent') return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+
+      if (type === 'bell') {
+        const playBellNote = (freq, startTime, duration) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc.type = 'sine'; osc.frequency.value = freq;
+          osc2.type = 'sine'; osc2.frequency.value = freq * 2.756;
+          gain.gain.setValueAtTime(0.6, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+          gain2.gain.setValueAtTime(0.15, startTime);
+          gain2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc2.connect(gain2); gain2.connect(ctx.destination);
+          osc.start(startTime); osc.stop(startTime + duration);
+          osc2.start(startTime); osc2.stop(startTime + duration * 0.6);
+        };
+        playBellNote(587.33, ctx.currentTime, 2.5);
+        playBellNote(440, ctx.currentTime + 0.5, 2.0);
+
+      } else if (type === 'chime') {
+        const notes = [1046.5, 1174.66, 1318.51, 1396.91];
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine'; osc.frequency.value = freq;
+          const t = ctx.currentTime + i * 0.22;
+          gain.gain.setValueAtTime(0, t);
+          gain.gain.linearRampToValueAtTime(0.5, t + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(t); osc.stop(t + 1.2);
+        });
+
+      } else if (type === 'digital') {
+        const pulses = [0, 0.18, 0.36];
+        pulses.forEach(offset => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'square'; osc.frequency.value = 880;
+          const t = ctx.currentTime + offset;
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.setValueAtTime(0, t + 0.12);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(t); osc.stop(t + 0.14);
+        });
+      }
+    }
+
+    function previewSound(type, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      playNotificationSound(type);
+    }
+
+    /* ════════════════════════════════════════════════════
+       THEME
+       ════════════════════════════════════════════════════ */
+    function applyTheme() {
+      const lightToggle = document.getElementById('set-light-mode');
+      settings.theme = lightToggle.checked ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', settings.theme);
+      document.getElementById('theme-btn').textContent = settings.theme === 'light' ? '☀️' : '🌙';
+    }
+
+    function toggleTheme() {
+      settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', settings.theme);
+      document.getElementById('theme-btn').textContent = settings.theme === 'light' ? '☀️' : '🌙';
+      const lightToggle = document.getElementById('set-light-mode');
+      if (lightToggle) lightToggle.checked = settings.theme === 'light';
+      persistSettings();
+    }
+
+    /* ════════════════════════════════════════════════════
+       SETTINGS MODAL
+       ════════════════════════════════════════════════════ */
+    function openSettings() {
+      // Populate fields from settings
+      document.getElementById('set-focus').value = settings.focusDuration;
+      document.getElementById('set-short').value = settings.shortBreakDuration;
+      document.getElementById('set-long').value  = settings.longBreakDuration;
+      document.getElementById('set-sessions-before-long').value = settings.sessionsBeforeLongBreak;
+      document.getElementById('set-auto-start').checked = settings.autoStart;
+      document.getElementById('set-daily-goal').value = settings.dailyGoal;
+      document.getElementById('set-light-mode').checked = settings.theme === 'light';
+
+      // Update sound grid selection
+      document.querySelectorAll('#sound-grid .sound-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.sound === settings.sound);
+        const radio = opt.querySelector('input[type="radio"]');
+        if (radio) radio.checked = opt.dataset.sound === settings.sound;
+      });
+
+      document.getElementById('settings-backdrop').classList.add('open');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-backdrop').classList.remove('open');
+    }
+
+    function saveSettings() {
+      const focusVal = parseInt(document.getElementById('set-focus').value) || 25;
+      const shortVal = parseInt(document.getElementById('set-short').value) || 5;
+      const longVal  = parseInt(document.getElementById('set-long').value)  || 15;
+      const sbLong   = parseInt(document.getElementById('set-sessions-before-long').value) || 4;
+      const goal     = parseInt(document.getElementById('set-daily-goal').value) || 8;
+      const autoS    = document.getElementById('set-auto-start').checked;
+      const selectedSound = document.querySelector('#sound-grid .sound-option.selected');
+      const sound    = selectedSound ? selectedSound.dataset.sound : 'bell';
+
+      settings.focusDuration          = Math.min(120, Math.max(1, focusVal));
+      settings.shortBreakDuration     = Math.min(60, Math.max(1, shortVal));
+      settings.longBreakDuration      = Math.min(90, Math.max(1, longVal));
+      settings.sessionsBeforeLongBreak = Math.min(10, Math.max(1, sbLong));
+      settings.dailyGoal              = Math.min(20, Math.max(1, goal));
+      settings.autoStart              = autoS;
+      settings.sound                  = sound;
+
+      persistSettings();
+
+      // Re-apply mode with new durations
+      MODES = getModes();
+      stopTimer();
+      totalSeconds = MODES[currentMode].minutes * 60;
+      secondsLeft  = totalSeconds;
+      updateDisplay();
+
+      // Update modal chips
+      document.getElementById('modal-focus-dur').textContent = settings.focusDuration + ' min';
+      document.getElementById('modal-break-dur').textContent = settings.shortBreakDuration + ' min';
+
+      // Re-render goal ring
+      updateGoalRing();
+
+      closeSettings();
+      showToast('✅ Settings saved!');
+    }
+
+    function resetSettings() {
+      if (!confirm('Reset all settings to defaults?')) return;
+      settings = Object.assign({}, DEFAULT_SETTINGS);
+      persistSettings();
+      MODES = getModes();
+      stopTimer();
+      totalSeconds = MODES[currentMode].minutes * 60;
+      secondsLeft  = totalSeconds;
+      updateDisplay();
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.getElementById('theme-btn').textContent = '🌙';
+      closeSettings();
+      showToast('Settings reset to defaults');
+    }
+
+    function stepDuration(inputId, delta) {
+      const input = document.getElementById(inputId);
+      let val = parseInt(input.value) + delta;
+      val = Math.max(parseInt(input.min) || 1, Math.min(parseInt(input.max) || 120, val));
+      input.value = val;
+    }
+
+    // Sound option click
+    document.querySelectorAll('#sound-grid .sound-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('#sound-grid .sound-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        const radio = opt.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+      });
+    });
+
+    // Close settings on backdrop click
+    document.getElementById('settings-backdrop').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('settings-backdrop')) closeSettings();
+    });
+
+    /* ════════════════════════════════════════════════════
+       SESSION HISTORY
+       ════════════════════════════════════════════════════ */
+    const MAX_HISTORY = 50;
+
+    function getHistory() {
+      try { return JSON.parse(localStorage.getItem('focusflow_history') || '[]'); } catch (e) { return []; }
+    }
+
+    function saveHistory(arr) {
+      localStorage.setItem('focusflow_history', JSON.stringify(arr.slice(-MAX_HISTORY)));
+    }
+
+    function recordSession(data) {
+      const history = getHistory();
+      history.push({
+        taskName:  data.taskName || 'FocusFlow Session',
+        type:      data.type || 'focus',
+        duration:  data.focusDuration || settings.focusDuration,
+        startTime: data.startTime || new Date().toISOString(),
+        status:    data.status || 'completed',
+        color:     selectedTaskColor || '#7c3aed'
+      });
+      saveHistory(history);
+    }
+
+    /* ════════════════════════════════════════════════════
+       SIDE PANEL (History + Analytics)
+       ════════════════════════════════════════════════════ */
+    let activePanelTab = 'history';
+
+    function openSidePanel(tab) {
+      document.getElementById('side-panel-overlay').classList.add('open');
+      document.getElementById('side-panel').classList.add('open');
+      document.getElementById('nav-history-btn').classList.toggle('active', tab === 'history');
+      document.getElementById('nav-analytics-btn').classList.toggle('active', tab === 'analytics');
+      switchPanelTab(tab);
+    }
+
+    function closeSidePanel() {
+      document.getElementById('side-panel-overlay').classList.remove('open');
+      document.getElementById('side-panel').classList.remove('open');
+      document.getElementById('nav-history-btn').classList.remove('active');
+      document.getElementById('nav-analytics-btn').classList.remove('active');
+    }
+
+    function switchPanelTab(tab) {
+      activePanelTab = tab;
+      document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+      document.getElementById('tab-analytics').classList.toggle('active', tab === 'analytics');
+      document.getElementById('tab-history').setAttribute('aria-selected', tab === 'history');
+      document.getElementById('tab-analytics').setAttribute('aria-selected', tab === 'analytics');
+      document.getElementById('panel-history').style.display  = tab === 'history' ? 'block' : 'none';
+      document.getElementById('panel-analytics').style.display = tab === 'analytics' ? 'block' : 'none';
+      if (tab === 'history') renderHistory();
+      else renderAnalytics();
+    }
+
+    /* ── Render History ── */
+    function renderHistory() {
+      const history = getHistory().slice().reverse(); // newest first
+      const container = document.getElementById('history-inner');
+
+      if (history.length === 0) {
+        container.innerHTML = `
+          <div class="history-empty">
+            <div class="empty-icon">📭</div>
+            <p>No sessions recorded yet.<br>Complete a focus session to see it here!</p>
+          </div>`;
+        return;
+      }
+
+      const typeLabels = { focus: 'Focus', short: 'Short Break', long: 'Long Break' };
+      const rows = history.map((s, i) => {
+        const date = new Date(s.startTime);
+        const timeStr = isNaN(date) ? '' : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = isNaN(date) ? '' : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        return `
+        <div class="history-item" style="animation-delay:${i * 0.04}s">
+          <div class="history-item-dot ${s.type || 'focus'}" style="background:${s.color || '#7c3aed'};color:${s.color || '#7c3aed'};"></div>
+          <div class="history-item-main">
+            <div class="history-item-task">${escHtml(s.taskName)}</div>
+            <div class="history-item-meta">
+              <span>${typeLabels[s.type] || 'Focus'}</span>
+              <span>·</span>
+              <span>${s.duration || settings.focusDuration}m</span>
+            </div>
+          </div>
+          <div class="history-item-right">
+            <div class="history-item-status ${s.status}">${s.status === 'completed' ? '✅ Done' : '⏭ Skipped'}</div>
+            <div class="history-item-time">${dateStr} ${timeStr}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="history-header-row">
+          <span class="history-count">${history.length} session${history.length !== 1 ? 's' : ''}</span>
+          <button class="history-clear-btn" onclick="clearHistory()">🗑 Clear All</button>
+        </div>
+        <div class="history-list">${rows}</div>`;
+    }
+
+    function clearHistory() {
+      if (!confirm('Clear all session history?')) return;
+      localStorage.removeItem('focusflow_history');
+      renderHistory();
+      showToast('History cleared');
+    }
+
+    /* ── Render Analytics ── */
+    function renderAnalytics() {
+      const history = getHistory();
+      const today = new Date().toDateString();
+
+      // Today stats
+      const todaySessions = history.filter(s => s.type === 'focus' && s.status === 'completed' && new Date(s.startTime).toDateString() === today);
+      const todayFocusMins = todaySessions.reduce((acc, s) => acc + (s.duration || settings.focusDuration), 0);
+
+      // All-time
+      const allFocusSessions = history.filter(s => s.type === 'focus' && s.status === 'completed');
+      const allFocusMins = allFocusSessions.reduce((acc, s) => acc + (s.duration || settings.focusDuration), 0);
+
+      // Compute streak
+      let currentStreak = 0;
+      const daySet = new Set(allFocusSessions.map(s => new Date(s.startTime).toDateString()));
+      let d = new Date();
+      while (daySet.has(d.toDateString())) { currentStreak++; d.setDate(d.getDate() - 1); }
+
+      // 7-day chart data
+      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const last7 = [];
+      for (let i = 6; i >= 0; i--) {
+        const dt = new Date(); dt.setDate(dt.getDate() - i);
+        const dStr = dt.toDateString();
+        const mins = history.filter(s => s.type === 'focus' && s.status === 'completed' && new Date(s.startTime).toDateString() === dStr)
+                             .reduce((acc, s) => acc + (s.duration || settings.focusDuration), 0);
+        last7.push({ day: dayNames[dt.getDay()], mins, isToday: i === 0, date: dStr });
+      }
+
+      const maxMins = Math.max(...last7.map(d => d.mins), 1);
+
+      const bars = last7.map(d => {
+        const h = Math.max(4, Math.round((d.mins / maxMins) * 90));
+        return `
+          <div class="week-bar-col">
+            <div class="week-bar-wrap">
+              <div class="week-bar${d.isToday ? ' today' : ''}" style="height:${h}%" data-tip="${d.mins}m focused"></div>
+            </div>
+            <div class="week-bar-day${d.isToday ? ' today' : ''}">${d.day}</div>
+          </div>`;
+      }).join('');
+
+      // 28-day heatmap
+      const heatCells = [];
+      // Start from Sunday 3 weeks ago
+      const startDate = new Date(); startDate.setDate(startDate.getDate() - 27);
+      const startDay = startDate.getDay(); // 0=Sun
+      // Pad to start of week
+      for (let p = 0; p < startDay; p++) heatCells.push(null); // will skip
+
+      const dayLabels = ['S','M','T','W','T','F','S'];
+
+      for (let i = 0; i < 28; i++) {
+        const dt = new Date(); dt.setDate(dt.getDate() - (27 - i));
+        const dStr = dt.toDateString();
+        const count = history.filter(s => s.type === 'focus' && s.status === 'completed' && new Date(s.startTime).toDateString() === dStr).length;
+        const level = count === 0 ? 0 : count === 1 ? 1 : count <= 3 ? 2 : count <= 5 ? 3 : 4;
+        const isToday = dStr === today;
+        heatCells.push({ level, count, dStr, isToday });
+      }
+
+      const dayLabelHtml = dayLabels.map(d => `<div class="heatmap-day-label">${d}</div>`).join('');
+      const heatHtml = heatCells.map(cell => {
+        if (cell === null) return '<div></div>';
+        return `<div class="heatmap-cell level-${cell.level}${cell.isToday ? ' today' : ''}" data-tip="${cell.count} session${cell.count !== 1 ? 's' : ''} · ${cell.dStr}"></div>`;
+      }).join('');
+
+      document.getElementById('analytics-inner').innerHTML = `
+        <div class="analytics-summary-grid">
+          <div class="analytics-stat-card">
+            <div class="analytics-stat-icon">🎯</div>
+            <div class="analytics-stat-value">${todaySessions.length}</div>
+            <div class="analytics-stat-label">Today's Sessions</div>
+          </div>
+          <div class="analytics-stat-card">
+            <div class="analytics-stat-icon">⏱</div>
+            <div class="analytics-stat-value">${todayFocusMins}m</div>
+            <div class="analytics-stat-label">Today's Focus</div>
+          </div>
+          <div class="analytics-stat-card">
+            <div class="analytics-stat-icon">🔥</div>
+            <div class="analytics-stat-value">${currentStreak}</div>
+            <div class="analytics-stat-label">Day Streak</div>
+          </div>
+          <div class="analytics-stat-card">
+            <div class="analytics-stat-icon">📈</div>
+            <div class="analytics-stat-value">${allFocusMins}m</div>
+            <div class="analytics-stat-label">Total Focus</div>
+          </div>
+        </div>
+
+        <div class="analytics-section-title">📅 Last 7 Days</div>
+        <div class="week-chart">${bars}</div>
+
+        <div class="analytics-section-title">🗓 Activity (28 days)</div>
+        <div class="heatmap-day-labels">${dayLabelHtml}</div>
+        <div class="heatmap-grid">${heatHtml}</div>
+      `;
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ════════════════════════════════════════════════════
+       FOCUS MODE STATE
+       ════════════════════════════════════════════════════ */
+    const FO_CIRC = 2 * Math.PI * 155;
     let foRunning = false;
     let foIntervalId = null;
     let foSecondsLeft = totalSeconds;
     let foSessionsDone = 0;
 
-    const foOverlay = document.getElementById('focus-overlay');
-    const foTime = document.getElementById('fo-time');
-    const foLabel = document.getElementById('fo-label');
-    const foPlay = document.getElementById('fo-play');
-    const foArc = document.getElementById('fo-ring-arc');
+    const foOverlay  = document.getElementById('focus-overlay');
+    const foTime     = document.getElementById('fo-time');
+    const foLabel    = document.getElementById('fo-label');
+    const foPlay     = document.getElementById('fo-play');
+    const foArc      = document.getElementById('fo-ring-arc');
     const foRingWrap = document.getElementById('fo-ring-wrap');
-    const foFlash = document.getElementById('fo-flash');
-    const foBadge = document.getElementById('fo-session-badge');
-    const foDots = document.getElementById('fo-dots');
-    const foHint = document.getElementById('fo-hint');
+    const foFlash    = document.getElementById('fo-flash');
+    const foBadge    = document.getElementById('fo-session-badge');
+    const foDots     = document.getElementById('fo-dots');
+    const foHint     = document.getElementById('fo-hint');
 
     foArc.style.strokeDasharray = FO_CIRC;
     foArc.style.strokeDashoffset = 0;
@@ -941,6 +1381,7 @@
     function foUpdateTime(s) {
       foTime.textContent = formatTime(s);
       foUpdateRing(s, totalSeconds);
+      document.title = `${formatTime(s)} — FocusFlow`;
     }
 
     function foApplyMode(mode) {
@@ -953,70 +1394,57 @@
       document.documentElement.style.setProperty('--accent-glow', m.glow);
       const emojis = { focus: '🎯 FOCUS SESSION', short: '☕ SHORT BREAK', long: '🌙 LONG BREAK' };
       foBadge.textContent = emojis[mode];
-      // sync card mode too
       applyMode(mode);
     }
 
     function foRenderDots() {
       while (foDots.firstChild) foDots.removeChild(foDots.firstChild);
-      for (let i = 0; i < 4; i++) {
+      const total = settings.sessionsBeforeLongBreak;
+      for (let i = 0; i < total; i++) {
         const d = document.createElement('span');
-        d.className = 'fo-dot' + (i < (foSessionsDone % 4) ? ' fo-dot-done' : '');
+        d.className = 'fo-dot' + (i < (foSessionsDone % total) ? ' fo-dot-done' : '');
         foDots.appendChild(d);
       }
     }
 
     function foStop() {
-      clearInterval(foIntervalId);
-      foIntervalId = null;
-      foRunning = false;
-      foPlay.textContent = '▶';
-      foPlay.setAttribute('aria-label', 'Play');
+      clearInterval(foIntervalId); foIntervalId = null; foRunning = false;
+      foPlay.textContent = '▶'; foPlay.setAttribute('aria-label', 'Play');
     }
 
     function foStart() {
       foRunning = true;
-      foPlay.textContent = '⏸';
-      foPlay.setAttribute('aria-label', 'Pause');
+      foPlay.textContent = '⏸'; foPlay.setAttribute('aria-label', 'Pause');
       foIntervalId = setInterval(() => {
         foSecondsLeft--;
         foUpdateTime(foSecondsLeft);
-        // keep main card in sync
         secondsLeft = foSecondsLeft;
         updateRing();
         timerDisplay.textContent = formatTime(secondsLeft);
-        if (currentMode === 'focus') {
-          minutesFocused++;
-          minutesFocusedEl.textContent = formatFocusedTime(minutesFocused);
-        }
-        if (foSecondsLeft <= 0) {
-          foSessionComplete();
-        }
+        if (currentMode === 'focus') { secondsFocused++; minutesFocusedEl.textContent = formatFocusedTime(secondsFocused); }
+        if (foSecondsLeft <= 0) foSessionComplete();
       }, 1000);
     }
 
-    function focusToggle() {
-      if (foRunning) { foStop(); } else { foStart(); }
-    }
+    function focusToggle() { if (foRunning) { foStop(); } else { foStart(); } }
 
     function focusReset() {
       foStop();
       foSecondsLeft = totalSeconds;
       foUpdateTime(foSecondsLeft);
-      resetFocusedTime();
+      secondsFocused = 0;
+      minutesFocusedEl.textContent = formatFocusedTime(0);
       showToast('Timer reset ↺');
     }
 
     function focusSkip() {
       foStop();
-      // Submit skipped focus session
       if (currentMode === 'focus') {
         const data = buildSessionData('skipped');
+        recordSession({ ...data, type: currentMode, startTime: new Date().toISOString() });
         saveSessionLocally(data);
         setSyncStatus('syncing');
-        submitSessionToGoogleForms(data)
-          .then(() => setSyncStatus('synced'))
-          .catch(() => setSyncStatus('error'));
+        submitSessionToGoogleForms(data).then(() => setSyncStatus('synced')).catch(() => setSyncStatus('error'));
       }
       foSessionComplete();
     }
@@ -1024,52 +1452,50 @@
     function foSessionComplete() {
       foStop();
       foArc.style.strokeDashoffset = FO_CIRC;
-      // flash animation
       foFlash.classList.add('fo-flash-active');
       setTimeout(() => foFlash.classList.remove('fo-flash-active'), 800);
+      playNotificationSound(settings.sound);
 
       if (currentMode === 'focus') {
         foSessionsDone++;
-        sessionsDone++;
-        streak++;
-        sessionsCount.textContent = sessionsDone;
-        streakCount.textContent = streak;
+        sessionsDone++; streak++;
+        bumpStat('sessions-count', sessionsDone);
+        bumpStat('streak-count', streak);
         foRenderDots();
+        updateGoalRing();
 
-        // Save & sync completed session from focus overlay
         const data = buildSessionData('completed');
+        recordSession({ ...data, type: 'focus', startTime: new Date().toISOString() });
         saveSessionLocally(data);
         setSyncStatus('syncing');
-        submitSessionToGoogleForms(data)
-          .then(() => setSyncStatus('synced'))
-          .catch(() => setSyncStatus('error'));
+        submitSessionToGoogleForms(data).then(() => setSyncStatus('synced')).catch(() => setSyncStatus('error'));
 
-        const nextMode = (sessionsDone % 4 === 0) ? 'long' : 'short';
-        const msg = nextMode === 'long'
-          ? '🎉 4 sessions done! Long break time.'
-          : '✅ Focus done! Short break starting...';
+        const nextMode = (sessionsDone % settings.sessionsBeforeLongBreak === 0) ? 'long' : 'short';
+        const msg = nextMode === 'long' ? '🎉 Long break earned!' : '✅ Focus done! Rest time.';
         showToast(msg);
         setTimeout(() => {
           foSwitchMode(nextMode);
-          setTimeout(() => foStart(), 800);
+          if (settings.autoStart) setTimeout(() => foStart(), 800);
         }, 1800);
       } else {
-        showToast('☕ Break done! Focus session starting...');
+        const data = buildSessionData('completed');
+        recordSession({ ...data, type: currentMode, startTime: new Date().toISOString() });
+        showToast('☕ Break done! Focus starting...');
         setTimeout(() => {
           foSwitchMode('focus');
-          setTimeout(() => foStart(), 800);
+          if (settings.autoStart) setTimeout(() => foStart(), 800);
         }, 1800);
       }
     }
 
     function foSwitchMode(mode) {
       currentMode = mode;
+      MODES = getModes();
       totalSeconds = MODES[mode].minutes * 60;
       foSecondsLeft = totalSeconds;
-      secondsLeft = totalSeconds;
+      secondsLeft   = totalSeconds;
       foUpdateTime(foSecondsLeft);
       foApplyMode(mode);
-      // sync main card tabs
       document.querySelectorAll('.mode-tab').forEach(t => {
         t.classList.remove('active'); t.setAttribute('aria-selected', 'false');
       });
@@ -1079,31 +1505,39 @@
       startPauseBtn.textContent = '▶ Start';
     }
 
-    /* ─── Task Prompt Modal Logic ─── */
+    /* ════════════════════════════════════════════════════
+       TASK MODAL
+       ════════════════════════════════════════════════════ */
+    let _taskModalCallback = null;
+    let selectedTaskColor  = '#7c3aed';
 
-    let _taskModalCallback = null; // function to call after task is confirmed
+    // Color dot selection
+    document.querySelectorAll('.task-color-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        document.querySelectorAll('.task-color-dot').forEach(d => d.classList.remove('selected'));
+        dot.classList.add('selected');
+        selectedTaskColor = dot.dataset.color;
+      });
+    });
 
-    /**
-     * Open the task prompt modal.
-     * @param {boolean} isStart   - true if we're about to start the timer
-     * @param {Function} [cb]     - optional callback to invoke after confirm/skip
-     */
     function openTaskModal(isStart, cb) {
       _taskModalCallback = cb || null;
       const backdrop = document.getElementById('task-modal-backdrop');
-      const input = document.getElementById('task-modal-input');
+      const input    = document.getElementById('task-modal-input');
 
-      // Pre-fill with any saved task name
       const saved = localStorage.getItem('focusflow_last_task') || '';
       input.value = saved;
 
-      // Update the auto-info chips from current mode
-      const focusMin = MODES.focus.minutes;
-      const breakMin = currentMode === 'long' ? MODES.long.minutes : MODES.short.minutes;
+      // Recent tasks
+      renderRecentTaskChips();
+
+      // Info chips
+      MODES = getModes();
+      const focusMin = settings.focusDuration;
+      const breakMin = currentMode === 'long' ? settings.longBreakDuration : settings.shortBreakDuration;
       document.getElementById('modal-focus-dur').textContent = focusMin + ' min';
       document.getElementById('modal-break-dur').textContent = breakMin + ' min';
 
-      // Update start button label
       const btn = document.getElementById('task-modal-confirm');
       btn.innerHTML = isStart ? '▶ &nbsp;Start Focusing' : '✓ &nbsp;Set Task';
 
@@ -1111,140 +1545,156 @@
       setTimeout(() => input.focus(), 80);
     }
 
+    function renderRecentTaskChips() {
+      try {
+        const recent = JSON.parse(localStorage.getItem('focusflow_recent_tasks') || '[]');
+        const row    = document.getElementById('recent-tasks-row');
+        const chips  = document.getElementById('recent-task-chips');
+        if (!recent.length) { row.style.display = 'none'; return; }
+        row.style.display = 'block';
+        chips.innerHTML = recent.slice(-5).reverse().map(t =>
+          `<button class="recent-task-chip" onclick="selectRecentTask('${escHtml(t)}')" title="${escHtml(t)}">${escHtml(t.length > 20 ? t.slice(0,20) + '…' : t)}</button>`
+        ).join('');
+      } catch (e) { }
+    }
+
+    function selectRecentTask(name) {
+      document.getElementById('task-modal-input').value = name;
+      document.getElementById('task-modal-input').focus();
+    }
+
+    function saveRecentTask(name) {
+      if (!name || name === 'FocusFlow Session') return;
+      try {
+        let recent = JSON.parse(localStorage.getItem('focusflow_recent_tasks') || '[]');
+        recent = recent.filter(t => t !== name);
+        recent.push(name);
+        localStorage.setItem('focusflow_recent_tasks', JSON.stringify(recent.slice(-10)));
+      } catch (e) { }
+    }
+
     function closeTaskModal() {
       document.getElementById('task-modal-backdrop').classList.remove('open');
     }
 
     function taskModalConfirm() {
-      const input = document.getElementById('task-modal-input');
+      const input    = document.getElementById('task-modal-input');
       const taskName = input.value.trim();
-      _applyTaskName(taskName || 'FocusFlow Session');
+      const finalName = taskName || 'FocusFlow Session';
+      saveRecentTask(finalName);
+      _applyTaskName(finalName);
       closeTaskModal();
       if (_taskModalCallback) { _taskModalCallback(); _taskModalCallback = null; }
     }
 
     function taskModalSkip() {
-      // Keep whatever task is already set, or use default
       const current = document.getElementById('task-name-input').value || 'FocusFlow Session';
       _applyTaskName(current);
       closeTaskModal();
       if (_taskModalCallback) { _taskModalCallback(); _taskModalCallback = null; }
     }
 
-    /** Apply a task name to the hidden input and the visible badge */
     function _applyTaskName(name) {
-      const hidden = document.getElementById('task-name-input');
-      hidden.value = name;
+      const hidden    = document.getElementById('task-name-input');
+      hidden.value    = name;
       localStorage.setItem('focusflow_last_task', name);
 
-      const badge = document.getElementById('task-badge-display');
+      const badge     = document.getElementById('task-badge-display');
       const badgeIcon = document.getElementById('task-badge-icon');
       const badgeText = document.getElementById('task-badge-text');
 
       if (name && name !== 'FocusFlow Session') {
         badge.className = 'task-badge';
         badgeIcon.style.display = 'inline';
-        badgeText.textContent = name;
+        badgeText.textContent   = name;
+        // Colour indicator dot
+        let colorDot = badge.querySelector('.task-badge-color');
+        if (!colorDot) {
+          colorDot = document.createElement('span');
+          colorDot.className = 'task-badge-color';
+          badge.insertBefore(colorDot, badgeIcon);
+        }
+        colorDot.style.background = selectedTaskColor;
+        colorDot.style.boxShadow  = `0 0 5px ${selectedTaskColor}`;
       } else {
         badge.className = 'task-badge-empty';
         badgeIcon.style.display = 'none';
-        badgeText.textContent = '✏️  Set your task…';
+        badgeText.textContent   = '✏️  Set your task…';
       }
 
       // Mirror to focus overlay
-      const foLabel = document.getElementById('fo-task-label');
-      if (foLabel) foLabel.textContent = (name !== 'FocusFlow Session') ? name : '';
+      const foTaskLabel = document.getElementById('fo-task-label');
+      if (foTaskLabel) foTaskLabel.textContent = (name !== 'FocusFlow Session') ? name : '';
     }
 
-    function _escHtml(str) {
-      // kept for compatibility but no longer used for innerHTML
-      return str;
-    }
-
-    // Keyboard handler for modal
+    // Keyboard handlers for modal
     document.getElementById('task-modal-input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); taskModalConfirm(); }
+      if (e.key === 'Enter')  { e.preventDefault(); taskModalConfirm(); }
       if (e.key === 'Escape') { e.preventDefault(); taskModalSkip(); }
     });
 
-    // Click backdrop to skip
     document.getElementById('task-modal-backdrop').addEventListener('click', (e) => {
       if (e.target === document.getElementById('task-modal-backdrop')) taskModalSkip();
     });
 
-    /* ─── Google Forms Helpers ─── */
-
-    /**
-     * Assemble the session payload from current timer state.
-     * @param {'completed'|'skipped'} status
-     */
+    /* ════════════════════════════════════════════════════
+       GOOGLE FORMS HELPERS
+       ════════════════════════════════════════════════════ */
     function buildSessionData(status) {
       const taskInput = document.getElementById('task-name-input');
-      const taskName = (taskInput && taskInput.value.trim()) || 'FocusFlow Session';
-      const breakMin = currentMode === 'long' ? MODES.long.minutes : MODES.short.minutes;
+      const taskName  = (taskInput && taskInput.value.trim()) || 'FocusFlow Session';
+      const breakMin  = currentMode === 'long' ? settings.longBreakDuration : settings.shortBreakDuration;
       return {
         taskName,
-        focusDuration: MODES.focus.minutes,
-        breakDuration: breakMin,
-        sessionsCompleted: sessionsDone + (status === 'completed' ? 1 : 0),
+        focusDuration:      settings.focusDuration,
+        breakDuration:      breakMin,
+        sessionsCompleted:  sessionsDone + (status === 'completed' ? 1 : 0),
         dateTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
         status,
       };
     }
 
-    /**
-     * Update the cloud sync indicator state.
-     * @param {'idle'|'syncing'|'synced'|'error'} state
-     */
     function setSyncStatus(state) {
-      const el = document.getElementById('sync-indicator');
+      const el    = document.getElementById('sync-indicator');
       const label = document.getElementById('sync-label');
       if (!el || !label) return;
       el.className = 'sync-indicator ' + state;
       const labels = { idle: 'Sheets', syncing: 'Syncing…', synced: 'Synced ✓', error: 'Retry' };
       label.textContent = labels[state] || 'Sheets';
-      // Auto-reset to idle after 4 seconds
       if (state === 'synced' || state === 'error') {
         clearTimeout(el._resetTimer);
         el._resetTimer = setTimeout(() => setSyncStatus('idle'), 4000);
       }
     }
 
+    /* ════════════════════════════════════════════════════
+       FOCUS MODE ENTER / EXIT
+       ════════════════════════════════════════════════════ */
     function enterFocusMode() {
-      // Sync task label into focus overlay
-      const taskInput = document.getElementById('task-name-input');
-      const foTaskLabel = document.getElementById('fo-task-label');
-      if (foTaskLabel && taskInput) {
-        foTaskLabel.textContent = taskInput.value.trim() || '';
-      }
+      const taskInput    = document.getElementById('task-name-input');
+      const foTaskLabel  = document.getElementById('fo-task-label');
+      if (foTaskLabel && taskInput) foTaskLabel.textContent = taskInput.value.trim() || '';
 
-      // Sync focus overlay with current timer state
       foSecondsLeft = secondsLeft;
       foUpdateTime(foSecondsLeft);
       foApplyMode(currentMode);
       foRenderDots();
       foPlay.textContent = '▶';
-
-      // Stop any running main timer
       stopTimer();
 
-      // Show overlay
       foOverlay.classList.add('fo-visible');
       document.body.style.overflow = 'hidden';
 
-      // Show hint then fade it after 4s
       foHint.style.opacity = '1';
       clearTimeout(foHint._fadeTimer);
       foHint._fadeTimer = setTimeout(() => { foHint.style.opacity = '0'; }, 4000);
 
-      // Attempt fullscreen
       try {
         const el = document.documentElement;
         if (el.requestFullscreen) el.requestFullscreen();
         else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
       } catch (e) { }
 
-      // Auto-start after transition
       setTimeout(() => foStart(), 700);
     }
 
@@ -1252,11 +1702,9 @@
       foStop();
       foOverlay.classList.remove('fo-visible');
       document.body.style.overflow = '';
-      // sync main timer
       secondsLeft = foSecondsLeft;
       updateDisplay();
-
-      // Exit fullscreen
+      document.title = 'FocusFlow · Pomodoro Productivity Timer';
       try {
         if (document.exitFullscreen) document.exitFullscreen();
         else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -1265,7 +1713,7 @@
 
     function heroStartClick() {
       const taskVal = document.getElementById('task-name-input').value.trim();
-      const noTask = !taskVal || taskVal === 'FocusFlow Session';
+      const noTask  = !taskVal || taskVal === 'FocusFlow Session';
       if (currentMode === 'focus' && noTask) {
         openTaskModal(true, () => enterFocusMode());
       } else {
@@ -1273,31 +1721,85 @@
       }
     }
 
-    /* Keyboard shortcuts */
+    /* ── Keyboard shortcuts ── */
     document.addEventListener('keydown', (e) => {
       if (!foOverlay.classList.contains('fo-visible')) return;
       if (e.code === 'Space') { e.preventDefault(); focusToggle(); }
       if (e.code === 'Escape') { exitFocusMode(); }
-      // show hint briefly on any key
       foHint.style.opacity = '1';
       clearTimeout(foHint._fadeTimer);
       foHint._fadeTimer = setTimeout(() => { foHint.style.opacity = '0'; }, 3000);
     });
 
-    /* Exit fullscreen also triggers exit */
     document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement && foOverlay.classList.contains('fo-visible')) {
-        exitFocusMode();
-      }
+      if (!document.fullscreenElement && foOverlay.classList.contains('fo-visible')) exitFocusMode();
     });
 
+    /* ════════════════════════════════════════════════════
+       TOAST
+       ════════════════════════════════════════════════════ */
+    let toastTimer = null;
+
     function showToast(msg) {
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3200);
+      cancelAutoStart();
+      showToastRaw(msg);
     }
 
-    /* Intersection Observer for feature box animations */
+    function showToastRaw(msg) {
+      toastText.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3500);
+    }
+
+    /* ════════════════════════════════════════════════════
+       SPOTIFY
+       ════════════════════════════════════════════════════ */
+    function togglePlaylistEditor() {
+      const editor   = document.getElementById('playlist-editor');
+      const backdrop = document.getElementById('playlist-editor-backdrop');
+      const input    = document.getElementById('playlist-input');
+      if (editor.style.display === 'none') {
+        editor.style.display = 'block'; backdrop.classList.add('active'); input.focus();
+      } else {
+        editor.style.display = 'none'; backdrop.classList.remove('active');
+      }
+    }
+
+    function closePlaylistEditor() {
+      document.getElementById('playlist-editor').style.display = 'none';
+      document.getElementById('playlist-editor-backdrop').classList.remove('active');
+    }
+
+    function extractPlaylistId(input) {
+      const urlMatch = input.match(/spotify\.com\/playlist\/([a-zA-Z0-9]+)/);
+      if (urlMatch) return urlMatch[1];
+      if (/^[a-zA-Z0-9]{22}$/.test(input.trim())) return input.trim();
+      return null;
+    }
+
+    function applyPlaylist() {
+      const input = document.getElementById('playlist-input').value.trim();
+      if (!input) { showToast('Please enter a playlist URL or ID'); return; }
+      const playlistId = extractPlaylistId(input);
+      if (!playlistId) { showToast('❌ Invalid Spotify playlist URL or ID'); return; }
+      document.getElementById('spotify-iframe').src = `https://open.spotify.com/embed/playlist/${playlistId}`;
+      localStorage.setItem('spotifyPlaylistId', playlistId);
+      showToast('✅ Playlist updated!');
+      togglePlaylistEditor();
+    }
+
+    function loadSavedPlaylist() {
+      const savedId = localStorage.getItem('spotifyPlaylistId');
+      if (savedId) document.getElementById('spotify-iframe').src = `https://open.spotify.com/embed/playlist/${savedId}`;
+    }
+
+    document.getElementById('playlist-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyPlaylist(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePlaylistEditor(); });
+
+    /* ════════════════════════════════════════════════════
+       INTERSECTION OBSERVER (feature/step animations)
+       ════════════════════════════════════════════════════ */
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; }
@@ -1311,97 +1813,39 @@
       observer.observe(el);
     });
 
-    /* Init */
-    applyMode('focus');
-    updateDisplay();
+    /* ════════════════════════════════════════════════════
+       INIT
+       ════════════════════════════════════════════════════ */
+    (function init() {
+      loadSettings();
+      MODES = getModes();
+      totalSeconds = MODES.focus.minutes * 60;
+      secondsLeft  = totalSeconds;
+      applyMode('focus');
+      updateDisplay();
 
-    /* ─── Spotify Playlist Customization ─── */
-    function togglePlaylistEditor() {
-      const editor = document.getElementById('playlist-editor');
-      const backdrop = document.getElementById('playlist-editor-backdrop');
-      const input = document.getElementById('playlist-input');
+      // Apply theme
+      document.documentElement.setAttribute('data-theme', settings.theme);
+      document.getElementById('theme-btn').textContent = settings.theme === 'light' ? '☀️' : '🌙';
+      const lightToggle = document.getElementById('set-light-mode');
+      if (lightToggle) lightToggle.checked = settings.theme === 'light';
 
-      if (editor.style.display === 'none') {
-        editor.style.display = 'block';
-        backdrop.classList.add('active');
-        input.focus();
-      } else {
-        editor.style.display = 'none';
-        backdrop.classList.remove('active');
-      }
-    }
+      // Set initial goal ring
+      goalRingProgress.style.strokeDasharray = GOAL_CIRCUMFERENCE;
+      goalRingProgress.style.strokeDashoffset = GOAL_CIRCUMFERENCE;
+      updateGoalRing();
 
-    function closePlaylistEditor() {
-      const editor = document.getElementById('playlist-editor');
-      const backdrop = document.getElementById('playlist-editor-backdrop');
-      editor.style.display = 'none';
-      backdrop.classList.remove('active');
-    }
-
-    function extractPlaylistId(input) {
-      // Handle full Spotify URL: https://open.spotify.com/playlist/PLAYLIST_ID
-      const urlMatch = input.match(/(?:spotify\.com\/playlist\/|\/playlist\/)([a-zA-Z0-9]+)/);
-      if (urlMatch) return urlMatch[1];
-
-      // Handle direct playlist ID (alphanumeric string)
-      if (/^[a-zA-Z0-9]{22}$/.test(input.trim())) return input.trim();
-
-      return null;
-    }
-
-    function applyPlaylist() {
-      const input = document.getElementById('playlist-input').value.trim();
-
-      if (!input) {
-        showToast('Please enter a playlist URL or ID');
-        return;
-      }
-
-      const playlistId = extractPlaylistId(input);
-
-      if (!playlistId) {
-        showToast('❌ Invalid Spotify playlist URL or ID');
-        return;
-      }
-
-      // Update the iframe src
-      const iframe = document.getElementById('spotify-iframe');
-      iframe.src = `https://open.spotify.com/embed/playlist/${playlistId}`;
-
-      // Save to localStorage
-      localStorage.setItem('spotifyPlaylistId', playlistId);
-
-      showToast('✅ Playlist updated successfully!');
-      togglePlaylistEditor();
-    }
-
-    // Load saved playlist on page load
-    function loadSavedPlaylist() {
-      const savedId = localStorage.getItem('spotifyPlaylistId');
-      if (savedId) {
-        const iframe = document.getElementById('spotify-iframe');
-        iframe.src = `https://open.spotify.com/embed/playlist/${savedId}`;
-      }
-    }
-
-    // Allow Enter key to apply playlist
-    document.getElementById('playlist-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') applyPlaylist();
-    });
-
-    // Allow Escape key to close editor
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closePlaylistEditor();
-    });
-
-    // Restore saved task name on page load
-    (function () {
+      // Restore task
       const saved = localStorage.getItem('focusflow_last_task');
       if (saved) _applyTaskName(saved);
-    })();
 
-    // Load saved playlist when page loads
-    loadSavedPlaylist();
+      // Restore playlist
+      loadSavedPlaylist();
+
+      // Update modal durations
+      document.getElementById('modal-focus-dur').textContent = settings.focusDuration + ' min';
+      document.getElementById('modal-break-dur').textContent = settings.shortBreakDuration + ' min';
+    })();
   </script>
 
 </body>
